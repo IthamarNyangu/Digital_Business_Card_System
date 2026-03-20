@@ -1,0 +1,80 @@
+:root {
+    --app-navy: #14324a;
+    --app-green: #3c8b67;
+    --app-sand: #f4efe6;
+    --app-ink: #1f2a36;
+    --app-muted: #6c7782;
+}
+
+body {
+    font-family: "Instrument Sans", sans-serif;
+    color: var(--app-ink);
+}
+
+.admin-body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top right, rgba(60, 139, 103, 0.15), transparent 28%),
+        linear-gradient(180deg, #f7f9fb 0%, #eef3f8 100%);
+}
+
+.public-body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, rgba(60, 139, 103, 0.18), transparent 28%),
+        linear-gradient(145deg, #f3eee4 0%, #fbfaf7 50%, #eef4f8 100%);
+}
+
+.app-navbar {
+    background: linear-gradient(135deg, var(--app-navy), #245476);
+}
+
+.admin-card,
+.dashboard-stat,
+.public-card,
+.detail-tile {
+    border-radius: 1.25rem;
+}
+
+.admin-card {
+    margin-top: 10vh;
+}
+
+.dashboard-stat {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+}
+
+.public-card {
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 239, 230, 0.96));
+}
+
+.detail-tile {
+    padding: 1rem;
+    background: rgba(20, 50, 74, 0.05);
+    border: 1px solid rgba(20, 50, 74, 0.08);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--app-green);
+    --bs-btn-border-color: var(--app-green);
+    --bs-btn-hover-bg: #347655;
+    --bs-btn-hover-border-color: #347655;
+    --bs-btn-active-bg: #2c6548;
+    --bs-btn-active-border-color: #2c6548;
+}
+
+.table > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+.font-monospace {
+    word-break: break-all;
+}
+
+@media (max-width: 767.98px) {
+    .admin-card {
+        margin-top: 4rem;
+    }
+}
