@@ -50,8 +50,26 @@ class AuthController
     public function logout(): void
     {
         Csrf::ensure();
+        $logoutReason = (string) ($_POST['logout_reason'] ?? '');
         Auth::logout();
-        flash('success', 'You have been logged out.');
+
+        if ($logoutReason === 'timeout') {
+            flash('warning', Auth::timeoutMessage());
+        } else {
+            flash('success', 'You have been logged out.');
+        }
+
         redirect('/admin/login');
+    }
+
+    public function ping(): void
+    {
+        if (!Auth::check()) {
+            http_response_code(401);
+            return;
+        }
+
+        Csrf::ensure();
+        http_response_code(204);
     }
 }

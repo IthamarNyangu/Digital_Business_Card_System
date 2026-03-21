@@ -39,6 +39,11 @@ try {
         return;
     }
 
+    if ($method === 'POST' && $path === '/admin/session/ping') {
+        $authController->ping();
+        return;
+    }
+
     if ($method === 'GET' && $path === '/admin/dashboard') {
         $dashboardController->index();
         return;
