@@ -17,9 +17,24 @@ class EmployeeController
     {
         Auth::requireLogin();
 
+        $pdo = db();
+        $search = trim((string) ($_GET['search'] ?? ''));
+        $perPage = 5;
+        $requestedPage = (int) ($_GET['page'] ?? 1);
+        $page = max(1, $requestedPage);
+        $totalEmployees = EmployeeRepository::countFiltered($pdo, $search);
+        $totalPages = max(1, (int) ceil($totalEmployees / $perPage));
+        $page = min($page, $totalPages);
+        $offset = ($page - 1) * $perPage;
+
         render('employees/index', [
             'pageTitle' => 'Employees',
-            'employees' => EmployeeRepository::all(db()),
+            'employees' => EmployeeRepository::paginate($pdo, $perPage, $offset, $search),
+            'search' => $search,
+            'page' => $page,
+            'perPage' => $perPage,
+            'totalEmployees' => $totalEmployees,
+            'totalPages' => $totalPages,
         ], 'admin');
     }
 
@@ -152,6 +167,31 @@ class EmployeeController
 
         EmployeeRepository::deactivate(db(), $id);
         flash('success', 'Employee marked as inactive.');
+        redirect('/admin/employees');
+    }
+
+    public function activate(int $id): void
+    {
+        Auth::requireLogin();
+        Csrf::ensure();
+
+        $pdo = db();
+        $employee = EmployeeRepository::find($pdo, $id);
+
+        if (!$employee) {
+            render('errors/404', [
+                'pageTitle' => 'Employee Not Found',
+                'message' => 'The employee you are trying to activate does not exist.',
+            ], 'admin', 404);
+            return;
+        }
+
+        EmployeeRepository::activate($pdo, $id);
+
+        $updatedEmployee = EmployeeRepository::find($pdo, $id);
+        $this->tryGenerateQrCode($updatedEmployee);
+
+        flash('success', 'Employee marked as active.');
         redirect('/admin/employees');
     }
 

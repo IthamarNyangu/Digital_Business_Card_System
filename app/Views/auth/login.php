@@ -1,11 +1,11 @@
 <section class="login-panel">
     <div class="logo-shell">
-        <img src="<?= e(path_url('/media/logo.png')) ?>" alt="Right to Care Zambia" class="logo-image">
+        <img src="<?= e(path_url('/media/logo1.png')) ?>" alt="Right to Care Zambia" class="logo-image">
     </div>
 
     <p class="login-eyebrow">Admin Portal</p>
-    <h1 class="title">Digital Business Cards</h1>
-    <p class="login-copy">Sign in to manage employee contact pages, vCards, and QR codes.</p>
+    <p class="login-brand">Right to Care Zambia</p>
+    
 
     <form method="POST" action="<?= e(path_url('/admin/login')) ?>" novalidate>
         <?= csrf_field() ?>

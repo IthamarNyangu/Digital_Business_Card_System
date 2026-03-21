@@ -74,6 +74,11 @@ try {
         return;
     }
 
+    if ($method === 'POST' && preg_match('#^/admin/employees/(\d+)/activate$#', $path, $matches)) {
+        $employeeController->activate((int) $matches[1]);
+        return;
+    }
+
     if ($method === 'GET' && preg_match('#^/admin/employees/(\d+)/qr$#', $path, $matches)) {
         $employeeController->downloadQr((int) $matches[1]);
         return;

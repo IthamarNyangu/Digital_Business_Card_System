@@ -23,15 +23,17 @@ $isGuest = !Auth::check();
         <div class="container">
             <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="<?= e(path_url('/admin/dashboard')) ?>">
                 <img src="<?= e(path_url('/media/logo1.png')) ?>" alt="Right to Care Zambia" class="brand-logo">
-                <span>Admin Panel</span>
+                <span class="brand-lockup">
+                    <span class="brand-kicker">RTCZ</span>
+                    <span class="brand-label">Digital Business Card System</span>
+                </span>
             </a>
             <div class="d-flex align-items-center gap-3 ms-auto">
                 <a class="nav-link text-white-50" href="<?= e(path_url('/admin/dashboard')) ?>">Dashboard</a>
                 <a class="nav-link text-white-50" href="<?= e(path_url('/admin/employees')) ?>">Employees</a>
-                <span class="small text-white-50"><?= e(Auth::user()['username'] ?? '') ?></span>
                 <form method="POST" action="<?= e(path_url('/admin/logout')) ?>" class="d-inline">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                    <button type="submit" class="btn btn-sm btn-outline-light navbar-btn">Logout</button>
                 </form>
             </div>
         </div>

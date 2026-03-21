@@ -1,34 +1,42 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
     <div>
-        <p class="text-uppercase text-muted small fw-semibold mb-2">Overview</p>
         <h1 class="h2 mb-1">Admin Dashboard</h1>
         <p class="text-muted mb-0">Manage employee contact pages, QR codes, and public vCards.</p>
     </div>
-    <a href="<?= e(path_url('/admin/employees/create')) ?>" class="btn btn-primary">Add Employee</a>
+    <a href="<?= e(path_url('/admin/employees/create')) ?>" class="btn btn-primary dashboard-btn">Add Employee</a>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="card dashboard-stat h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <p class="text-muted mb-2">Total Employees</p>
-                <h2 class="display-6 mb-0"><?= e((string) $totalEmployees) ?></h2>
+            <div class="card-body dashboard-stat-body">
+                <div>
+                    <p class="dashboard-stat-label mb-1">Total Employees</p>
+                    <h2 class="dashboard-stat-value mb-0"><?= e((string) $totalEmployees) ?></h2>
+                </div>
+                <span class="dashboard-stat-chip dashboard-stat-chip-total">Directory</span>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card dashboard-stat h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <p class="text-muted mb-2">Active</p>
-                <h2 class="display-6 mb-0 text-success"><?= e((string) $activeEmployees) ?></h2>
+            <div class="card-body dashboard-stat-body">
+                <div>
+                    <p class="dashboard-stat-label mb-1">Active</p>
+                    <h2 class="dashboard-stat-value dashboard-stat-value-active mb-0"><?= e((string) $activeEmployees) ?></h2>
+                </div>
+                <span class="dashboard-stat-chip dashboard-stat-chip-active">Live</span>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card dashboard-stat h-100 border-0 shadow-sm">
-            <div class="card-body">
-                <p class="text-muted mb-2">Inactive</p>
-                <h2 class="display-6 mb-0 text-danger"><?= e((string) $inactiveEmployees) ?></h2>
+            <div class="card-body dashboard-stat-body">
+                <div>
+                    <p class="dashboard-stat-label mb-1">Inactive</p>
+                    <h2 class="dashboard-stat-value dashboard-stat-value-inactive mb-0"><?= e((string) $inactiveEmployees) ?></h2>
+                </div>
+                <span class="dashboard-stat-chip dashboard-stat-chip-inactive">Archived</span>
             </div>
         </div>
     </div>
@@ -37,8 +45,8 @@
 <div class="card border-0 shadow-sm">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="h5 mb-0">Recently Added Employees</h2>
-            <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-sm btn-outline-primary">Edit Records</a>
+            <h2 class="recent-employees-title mb-0">Recently Added Employees</h2>
+            <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-primary dashboard-btn dashboard-btn-secondary">Edit Records</a>
         </div>
 
         <?php if ($recentEmployees === []): ?>
