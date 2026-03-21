@@ -38,7 +38,7 @@
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 mb-0">Recently Added Employees</h2>
-            <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-sm btn-outline-primary">View All</a>
+            <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-sm btn-outline-primary">Edit Records</a>
         </div>
 
         <?php if ($recentEmployees === []): ?>
