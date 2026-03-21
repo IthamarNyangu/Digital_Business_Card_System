@@ -170,9 +170,18 @@ body {
 }
 
 .detail-tile {
-    padding: 1rem;
+    padding: 0.8rem 0.95rem;
     background: rgba(255, 255, 255, 0.68);
     border: 1px solid var(--line);
+}
+
+.detail-tile-label {
+    line-height: 1.1;
+    margin-bottom: 0.2rem;
+}
+
+.detail-tile-value {
+    line-height: 1.25;
 }
 
 .btn-primary {

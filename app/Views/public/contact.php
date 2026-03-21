@@ -10,29 +10,29 @@
         <div class="row g-3 mb-4">
             <div class="col-sm-6">
                 <div class="detail-tile h-100">
-                    <div class="small text-muted text-uppercase fw-semibold mb-1">Phone</div>
-                    <div class="fw-semibold"><?= e($employee['phone']) ?></div>
+                    <div class="detail-tile-label small text-muted text-uppercase fw-semibold">Phone</div>
+                    <div class="detail-tile-value fw-semibold"><?= e($employee['phone']) ?></div>
                 </div>
             </div>
             <div class="col-sm-6">
                 <div class="detail-tile h-100">
-                    <div class="small text-muted text-uppercase fw-semibold mb-1">Email</div>
-                    <div class="fw-semibold"><?= e($employee['email']) ?></div>
+                    <div class="detail-tile-label small text-muted text-uppercase fw-semibold">Email</div>
+                    <div class="detail-tile-value fw-semibold"><?= e($employee['email']) ?></div>
                 </div>
             </div>
             <?php if (!empty($employee['department'])): ?>
                 <div class="col-sm-6">
                     <div class="detail-tile h-100">
-                        <div class="small text-muted text-uppercase fw-semibold mb-1">Department</div>
-                        <div class="fw-semibold"><?= e($employee['department']) ?></div>
+                        <div class="detail-tile-label small text-muted text-uppercase fw-semibold">Department</div>
+                        <div class="detail-tile-value fw-semibold"><?= e($employee['department']) ?></div>
                     </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($employee['location'])): ?>
                 <div class="col-sm-6">
                     <div class="detail-tile h-100">
-                        <div class="small text-muted text-uppercase fw-semibold mb-1">Location</div>
-                        <div class="fw-semibold"><?= e($employee['location']) ?></div>
+                        <div class="detail-tile-label small text-muted text-uppercase fw-semibold">Location</div>
+                        <div class="detail-tile-value fw-semibold"><?= e($employee['location']) ?></div>
                     </div>
                 </div>
             <?php endif; ?>
