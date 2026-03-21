@@ -20,7 +20,7 @@ $employeeData = [
                     <p class="text-muted mb-0">The public contact page and vCard are generated from this one employee record.</p>
                 </div>
 
-                <form method="POST" action="<?= e(url($action)) ?>" novalidate>
+                <form method="POST" action="<?= e(path_url($action)) ?>" novalidate>
                     <?= csrf_field() ?>
 
                     <div class="row g-3">
@@ -83,7 +83,7 @@ $employeeData = [
 
                     <div class="d-flex flex-wrap gap-2 mt-4">
                         <button type="submit" class="btn btn-primary"><?= e($submitLabel) ?></button>
-                        <a href="<?= e(url('/admin/employees')) ?>" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -108,14 +108,14 @@ $employeeData = [
 
                         <dt class="text-muted mb-1">Public URL</dt>
                         <dd class="mb-3">
-                            <a href="<?= e(url('/c/' . $employee['public_token'])) ?>" target="_blank">
-                                <?= e(url('/c/' . $employee['public_token'])) ?>
+                            <a href="<?= e(path_url('/c/' . $employee['public_token'])) ?>" target="_blank">
+                                <?= e(path_url('/c/' . $employee['public_token'])) ?>
                             </a>
                         </dd>
                     </dl>
 
                     <?php if ($employee['status'] === 'active'): ?>
-                        <a href="<?= e(url('/admin/employees/' . $employee['id'] . '/qr')) ?>" class="btn btn-outline-dark w-100">Download QR Code</a>
+                        <a href="<?= e(path_url('/admin/employees/' . $employee['id'] . '/qr')) ?>" class="btn btn-outline-dark w-100">Download QR Code</a>
                     <?php else: ?>
                         <p class="small text-muted mb-0">Inactive employees keep their record, but the public contact page shows an inactive message.</p>
                     <?php endif; ?>

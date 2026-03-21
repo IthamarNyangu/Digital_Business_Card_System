@@ -6,7 +6,7 @@
                 <h1 class="h3 mb-3">Digital Business Cards</h1>
                 <p class="text-muted mb-4">Sign in to manage employee contact cards and QR codes.</p>
 
-                <form method="POST" action="<?= e(url('/admin/login')) ?>" novalidate>
+                <form method="POST" action="<?= e(path_url('/admin/login')) ?>" novalidate>
                     <?= csrf_field() ?>
 
                     <div class="mb-3">

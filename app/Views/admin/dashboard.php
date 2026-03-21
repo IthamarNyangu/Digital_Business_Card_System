@@ -4,7 +4,7 @@
         <h1 class="h2 mb-1">Admin Dashboard</h1>
         <p class="text-muted mb-0">Manage employee contact pages, QR codes, and public vCards.</p>
     </div>
-    <a href="<?= e(url('/admin/employees/create')) ?>" class="btn btn-primary">Add Employee</a>
+    <a href="<?= e(path_url('/admin/employees/create')) ?>" class="btn btn-primary">Add Employee</a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -38,7 +38,7 @@
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h5 mb-0">Recently Added Employees</h2>
-            <a href="<?= e(url('/admin/employees')) ?>" class="btn btn-sm btn-outline-primary">View All</a>
+            <a href="<?= e(path_url('/admin/employees')) ?>" class="btn btn-sm btn-outline-primary">View All</a>
         </div>
 
         <?php if ($recentEmployees === []): ?>

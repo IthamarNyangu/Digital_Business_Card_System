@@ -12,18 +12,18 @@ use App\Core\Auth;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= e(url('/assets/css/app.css')) ?>" rel="stylesheet">
+    <link href="<?= e(path_url('/assets/css/app.css')) ?>" rel="stylesheet">
 </head>
 <body class="admin-body">
 <?php if (Auth::check()): ?>
     <nav class="navbar navbar-expand-lg app-navbar mb-4">
         <div class="container">
-            <a class="navbar-brand fw-semibold" href="<?= e(url('/admin/dashboard')) ?>">Right to Care Zambia</a>
+            <a class="navbar-brand fw-semibold" href="<?= e(path_url('/admin/dashboard')) ?>">Right to Care Zambia</a>
             <div class="d-flex align-items-center gap-3 ms-auto">
-                <a class="nav-link text-white-50" href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
-                <a class="nav-link text-white-50" href="<?= e(url('/admin/employees')) ?>">Employees</a>
+                <a class="nav-link text-white-50" href="<?= e(path_url('/admin/dashboard')) ?>">Dashboard</a>
+                <a class="nav-link text-white-50" href="<?= e(path_url('/admin/employees')) ?>">Employees</a>
                 <span class="small text-white-50"><?= e(Auth::user()['username'] ?? '') ?></span>
-                <form method="POST" action="<?= e(url('/admin/logout')) ?>" class="d-inline">
+                <form method="POST" action="<?= e(path_url('/admin/logout')) ?>" class="d-inline">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
                 </form>

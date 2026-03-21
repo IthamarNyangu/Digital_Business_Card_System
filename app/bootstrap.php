@@ -36,7 +36,7 @@ $GLOBALS['config'] = [
 
 date_default_timezone_set(config('app.timezone', 'Africa/Lusaka'));
 
-if (session_status() === PHP_SESSION_NONE) {
+if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
     session_name(config('app.session_name', 'rtc_zambia_cards_admin'));
     session_start();
 }

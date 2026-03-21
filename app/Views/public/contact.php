@@ -39,7 +39,7 @@
         </div>
 
         <div class="d-grid gap-2">
-            <a href="<?= e(url('/c/' . $employee['public_token'] . '/vcf')) ?>" class="btn btn-primary btn-lg">Save Contact</a>
+            <a href="<?= e(path_url('/c/' . $employee['public_token'] . '/vcf')) ?>" class="btn btn-primary btn-lg">Save Contact</a>
             <a href="tel:<?= e($callNumber) ?>" class="btn btn-outline-dark btn-lg">Call</a>
             <a href="mailto:<?= e($employee['email']) ?>" class="btn btn-outline-dark btn-lg">Email</a>
         </div>

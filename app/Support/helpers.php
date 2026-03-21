@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use App\Core\Csrf;
 use App\Core\Database;
-use PDO;
-use RuntimeException;
 
 function base_path(string $path = ''): string
 {
@@ -37,6 +35,29 @@ function db(): PDO
     return Database::connection(config('database'));
 }
 
+function app_base_path(): string
+{
+    $scriptDirectory = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+
+    if ($scriptDirectory === '/' || $scriptDirectory === '.') {
+        return '';
+    }
+
+    return rtrim($scriptDirectory, '/');
+}
+
+function path_url(string $path = ''): string
+{
+    $basePath = app_base_path();
+    $cleanPath = '/' . ltrim($path, '/');
+
+    if ($path === '') {
+        return $basePath === '' ? '/' : $basePath;
+    }
+
+    return ($basePath === '' ? '' : $basePath) . $cleanPath;
+}
+
 function url(string $path = ''): string
 {
     $baseUrl = rtrim((string) config('app.base_url', ''), '/');
@@ -47,7 +68,7 @@ function url(string $path = ''): string
 
 function redirect(string $path): never
 {
-    $destination = preg_match('/^https?:\/\//i', $path) ? $path : url($path);
+    $destination = preg_match('/^https?:\/\//i', $path) ? $path : path_url($path);
 
     header('Location: ' . $destination);
     exit;

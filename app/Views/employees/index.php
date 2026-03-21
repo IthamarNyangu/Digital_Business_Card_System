@@ -4,7 +4,7 @@
         <h1 class="h2 mb-1">Employees</h1>
         <p class="text-muted mb-0">Each employee gets a random public token, a mobile contact page, and a downloadable QR code.</p>
     </div>
-    <a href="<?= e(url('/admin/employees/create')) ?>" class="btn btn-primary">Add Employee</a>
+    <a href="<?= e(path_url('/admin/employees/create')) ?>" class="btn btn-primary">Add Employee</a>
 </div>
 
 <div class="card border-0 shadow-sm">
@@ -44,16 +44,16 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="<?= e(url('/c/' . $employee['public_token'])) ?>" target="_blank" class="small">
+                                <a href="<?= e(path_url('/c/' . $employee['public_token'])) ?>" target="_blank" class="small">
                                     /c/<?= e($employee['public_token']) ?>
                                 </a>
                             </td>
                             <td class="text-end">
                                 <div class="d-flex flex-wrap justify-content-end gap-2">
-                                    <a href="<?= e(url('/admin/employees/' . $employee['id'] . '/edit')) ?>" class="btn btn-sm btn-outline-primary">Edit</a>
-                                    <a href="<?= e(url('/admin/employees/' . $employee['id'] . '/qr')) ?>" class="btn btn-sm btn-outline-dark">Download QR</a>
+                                    <a href="<?= e(path_url('/admin/employees/' . $employee['id'] . '/edit')) ?>" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="<?= e(path_url('/admin/employees/' . $employee['id'] . '/qr')) ?>" class="btn btn-sm btn-outline-dark">Download QR</a>
                                     <?php if ($employee['status'] === 'active'): ?>
-                                        <form method="POST" action="<?= e(url('/admin/employees/' . $employee['id'] . '/deactivate')) ?>" class="d-inline">
+                                        <form method="POST" action="<?= e(path_url('/admin/employees/' . $employee['id'] . '/deactivate')) ?>" class="d-inline">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Mark this employee as inactive?');">Deactivate</button>
                                         </form>
