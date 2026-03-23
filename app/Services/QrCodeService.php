@@ -10,16 +10,30 @@ class QrCodeService
 {
     public function generateForEmployee(array $employee): string
     {
-        $relativePath = 'storage/qrcodes/employee-' . $employee['id'] . '-' . $employee['public_token'] . '.png';
-        $publicUrl = url('/c/' . $employee['public_token']);
+        $mecardPayload = (string) ($employee['mecard_payload'] ?? '');
 
-        // The QR code stores the public contact URL, not any internal employee identifier.
-        $this->generatePng($publicUrl, $relativePath);
+        if ($mecardPayload === '') {
+            throw new RuntimeException('The MECARD payload is missing, so the QR code cannot be generated.');
+        }
+
+        $relativePath = 'storage/qrcodes/' . $this->buildFilename($employee);
+        $absolutePath = base_path($relativePath);
+        $previousPath = (string) ($employee['qr_code_path'] ?? '');
+
+        if ($previousPath !== '' && $previousPath !== $relativePath) {
+            $oldAbsolutePath = base_path($previousPath);
+
+            if (is_file($oldAbsolutePath)) {
+                @unlink($oldAbsolutePath);
+            }
+        }
+
+        $this->generatePng($mecardPayload, $absolutePath);
 
         return $relativePath;
     }
 
-    public function generatePng(string $content, string $relativePath): void
+    public function generatePng(string $content, string $absolutePath): void
     {
         if (!class_exists(\chillerlan\QRCode\QRCode::class)) {
             throw new RuntimeException('QR library is missing. Run composer install first.');
@@ -29,7 +43,6 @@ class QrCodeService
             throw new RuntimeException('The PHP GD extension is required to create PNG QR codes.');
         }
 
-        $absolutePath = base_path($relativePath);
         $directory = dirname($absolutePath);
 
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
@@ -44,7 +57,24 @@ class QrCodeService
             'imageTransparent' => false,
         ]);
 
-        // Passing a file path as the second argument writes the PNG directly to disk.
         (new \chillerlan\QRCode\QRCode($options))->render($content, $absolutePath);
+    }
+
+    private function buildFilename(array $employee): string
+    {
+        $firstName = $this->slugPart((string) ($employee['first_name'] ?? 'employee'));
+        $lastName = $this->slugPart((string) ($employee['last_name'] ?? 'contact'));
+        $id = (int) ($employee['id'] ?? 0);
+
+        return $firstName . '_' . $lastName . '_' . $id . '_qrcode.png';
+    }
+
+    private function slugPart(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/[^a-z0-9]+/i', '_', $value) ?? '';
+        $value = trim($value, '_');
+
+        return $value !== '' ? $value : 'contact';
     }
 }

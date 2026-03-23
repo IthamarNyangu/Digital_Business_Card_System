@@ -5,19 +5,49 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use PDO;
+use RuntimeException;
 
 class EmployeeRepository
 {
+    private static array $columnCache = [];
+
+    private const BULK_SCHEMA_COLUMNS = [
+        'organization',
+        'title',
+        'street',
+        'city',
+        'region',
+        'postal_code',
+        'country',
+        'mecard_payload',
+        'qr_code_path',
+        'updated_at',
+    ];
+
+    public static function missingBulkSchemaColumns(PDO $pdo): array
+    {
+        $columns = self::columnNames($pdo);
+
+        return array_values(array_diff(self::BULK_SCHEMA_COLUMNS, $columns));
+    }
+
+    public static function supportsEmployeeNumber(PDO $pdo): bool
+    {
+        return in_array('employee_number', self::columnNames($pdo), true);
+    }
+
     private static function searchColumns(): array
     {
         return [
             'first_name',
             'last_name',
             'CONCAT(first_name, " ", last_name)',
-            'position',
-            'COALESCE(department, "")',
+            'organization',
+            'title',
             'phone',
             'email',
+            'city',
+            'country',
         ];
     }
 
@@ -26,7 +56,7 @@ class EmployeeRepository
         $terms = preg_split('/\s+/', trim($search)) ?: [];
         $terms = array_values(array_filter(array_map(static fn (string $term): string => trim($term), $terms)));
 
-        return array_slice($terms, 0, 5);
+        return array_slice($terms, 0, 6);
     }
 
     private static function searchCondition(array $terms): string
@@ -55,17 +85,6 @@ class EmployeeRepository
         }
     }
 
-    public static function all(PDO $pdo): array
-    {
-        $statement = $pdo->query('
-            SELECT *
-            FROM employees
-            ORDER BY status ASC, last_name ASC, first_name ASC
-        ');
-
-        return $statement->fetchAll();
-    }
-
     public static function paginate(PDO $pdo, int $limit, int $offset, string $search = ''): array
     {
         $terms = self::searchTerms($search);
@@ -79,7 +98,7 @@ class EmployeeRepository
         }
 
         $sql .= '
-            ORDER BY status ASC, last_name ASC, first_name ASC
+            ORDER BY updated_at DESC, last_name ASC, first_name ASC
             LIMIT :limit OFFSET :offset
         ';
 
@@ -116,12 +135,34 @@ class EmployeeRepository
         return (int) $statement->fetchColumn();
     }
 
+    public static function all(PDO $pdo): array
+    {
+        $statement = $pdo->query('
+            SELECT *
+            FROM employees
+            ORDER BY updated_at DESC, last_name ASC, first_name ASC
+        ');
+
+        return $statement->fetchAll();
+    }
+
+    public static function allForZip(PDO $pdo): array
+    {
+        $statement = $pdo->query('
+            SELECT *
+            FROM employees
+            ORDER BY last_name ASC, first_name ASC
+        ');
+
+        return $statement->fetchAll();
+    }
+
     public static function recent(PDO $pdo, int $limit = 5): array
     {
         $statement = $pdo->prepare('
             SELECT *
             FROM employees
-            ORDER BY created_at DESC
+            ORDER BY updated_at DESC
             LIMIT :limit
         ');
         $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -135,12 +176,14 @@ class EmployeeRepository
         return (int) $pdo->query('SELECT COUNT(*) FROM employees')->fetchColumn();
     }
 
-    public static function countByStatus(PDO $pdo, string $status): int
+    public static function countWithQr(PDO $pdo): int
     {
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM employees WHERE status = :status');
-        $statement->execute(['status' => $status]);
+        return (int) $pdo->query('SELECT COUNT(*) FROM employees WHERE qr_code_path IS NOT NULL')->fetchColumn();
+    }
 
-        return (int) $statement->fetchColumn();
+    public static function countDistinctOrganizations(PDO $pdo): int
+    {
+        return (int) $pdo->query('SELECT COUNT(DISTINCT organization) FROM employees')->fetchColumn();
     }
 
     public static function find(PDO $pdo, int $id): ?array
@@ -153,128 +196,187 @@ class EmployeeRepository
         return $employee ?: null;
     }
 
-    public static function findByToken(PDO $pdo, string $token): ?array
+    public static function findByEmail(PDO $pdo, string $email): ?array
     {
-        $statement = $pdo->prepare('SELECT * FROM employees WHERE public_token = :token LIMIT 1');
-        $statement->execute(['token' => $token]);
+        $statement = $pdo->prepare('SELECT * FROM employees WHERE email = :email LIMIT 1');
+        $statement->execute(['email' => $email]);
 
         $employee = $statement->fetch();
 
         return $employee ?: null;
     }
 
-    public static function tokenExists(PDO $pdo, string $token): bool
+    public static function findByPhone(PDO $pdo, string $phone): ?array
     {
-        $statement = $pdo->prepare('SELECT COUNT(*) FROM employees WHERE public_token = :token');
-        $statement->execute(['token' => $token]);
+        $statement = $pdo->prepare('SELECT * FROM employees WHERE phone = :phone LIMIT 1');
+        $statement->execute(['phone' => $phone]);
 
-        return (int) $statement->fetchColumn() > 0;
+        $employee = $statement->fetch();
+
+        return $employee ?: null;
     }
 
-    public static function create(PDO $pdo, array $data): int
+    public static function findByEmployeeNumber(PDO $pdo, string $employeeNumber): ?array
     {
-        $statement = $pdo->prepare('
-            INSERT INTO employees (
-                public_token,
-                first_name,
-                last_name,
-                position,
-                department,
-                phone,
-                email,
-                location,
-                qr_code_path,
-                status
-            ) VALUES (
-                :public_token,
-                :first_name,
-                :last_name,
-                :position,
-                :department,
-                :phone,
-                :email,
-                :location,
-                :qr_code_path,
-                :status
-            )
-        ');
+        if (!self::supportsEmployeeNumber($pdo)) {
+            return null;
+        }
 
-        $statement->execute([
-            'public_token' => $data['public_token'],
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'position' => $data['position'],
-            'department' => $data['department'],
-            'phone' => $data['phone'],
-            'email' => $data['email'],
-            'location' => $data['location'],
-            'qr_code_path' => $data['qr_code_path'],
-            'status' => $data['status'],
-        ]);
+        $statement = $pdo->prepare('SELECT * FROM employees WHERE employee_number = :employee_number LIMIT 1');
+        $statement->execute(['employee_number' => $employeeNumber]);
 
-        return (int) $pdo->lastInsertId();
+        $employee = $statement->fetch();
+
+        return $employee ?: null;
     }
 
-    public static function update(PDO $pdo, int $id, array $data): void
+    public static function upsertContact(PDO $pdo, array $data): array
+    {
+        $duplicateFields = [];
+
+        if (($data['email'] ?? '') !== '' && self::findByEmail($pdo, $data['email'])) {
+            $duplicateFields[] = 'email';
+        }
+
+        if (($data['phone'] ?? '') !== '' && self::findByPhone($pdo, $data['phone'])) {
+            $duplicateFields[] = 'phone number';
+        }
+
+        if (($data['employee_number'] ?? null) !== null
+            && self::findByEmployeeNumber($pdo, (string) $data['employee_number'])) {
+            $duplicateFields[] = 'employee number';
+        }
+
+        if ($duplicateFields !== []) {
+            throw new RuntimeException(
+                'A contact with the same ' . implode(', ', $duplicateFields)
+                . ' already exists. Duplicate records are blocked to avoid accidental replacement.'
+            );
+        }
+
+        return [
+            'id' => self::create($pdo, $data),
+            'action' => 'created',
+        ];
+    }
+
+    public static function updateGeneratedAssets(PDO $pdo, int $id, string $mecardPayload, string $qrCodePath): void
     {
         $statement = $pdo->prepare('
             UPDATE employees
             SET
-                first_name = :first_name,
-                last_name = :last_name,
-                position = :position,
-                department = :department,
-                phone = :phone,
-                email = :email,
-                location = :location
+                mecard_payload = :mecard_payload,
+                qr_code_path = :qr_code_path
             WHERE id = :id
         ');
 
         $statement->execute([
             'id' => $id,
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'position' => $data['position'],
-            'department' => $data['department'],
-            'phone' => $data['phone'],
-            'email' => $data['email'],
-            'location' => $data['location'],
-        ]);
-    }
-
-    public static function deactivate(PDO $pdo, int $id): void
-    {
-        $statement = $pdo->prepare("
-            UPDATE employees
-            SET status = 'inactive'
-            WHERE id = :id
-        ");
-
-        $statement->execute(['id' => $id]);
-    }
-
-    public static function activate(PDO $pdo, int $id): void
-    {
-        $statement = $pdo->prepare("
-            UPDATE employees
-            SET status = 'active'
-            WHERE id = :id
-        ");
-
-        $statement->execute(['id' => $id]);
-    }
-
-    public static function updateQrCodePath(PDO $pdo, int $id, ?string $qrCodePath): void
-    {
-        $statement = $pdo->prepare('
-            UPDATE employees
-            SET qr_code_path = :qr_code_path
-            WHERE id = :id
-        ');
-
-        $statement->execute([
-            'id' => $id,
+            'mecard_payload' => $mecardPayload,
             'qr_code_path' => $qrCodePath,
         ]);
+    }
+
+    private static function create(PDO $pdo, array $data): int
+    {
+        $columns = [
+            'first_name',
+            'last_name',
+            'organization',
+            'title',
+            'phone',
+            'email',
+            'street',
+            'city',
+            'region',
+            'postal_code',
+            'country',
+        ];
+
+        if (self::supportsEmployeeNumber($pdo)) {
+            array_unshift($columns, 'employee_number');
+        }
+
+        $placeholders = array_map(static fn (string $column): string => ':' . $column, $columns);
+
+        $statement = $pdo->prepare(
+            'INSERT INTO employees (' . implode(', ', $columns) . ', mecard_payload, qr_code_path) VALUES ('
+            . implode(', ', $placeholders) . ', NULL, NULL)'
+        );
+
+        $statement->execute(self::contactParams($pdo, $data));
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    private static function updateContact(PDO $pdo, int $id, array $data): void
+    {
+        $assignments = [
+            'first_name = :first_name',
+            'last_name = :last_name',
+            'organization = :organization',
+            'title = :title',
+            'phone = :phone',
+            'email = :email',
+            'street = :street',
+            'city = :city',
+            'region = :region',
+            'postal_code = :postal_code',
+            'country = :country',
+        ];
+
+        if (self::supportsEmployeeNumber($pdo)) {
+            array_unshift($assignments, 'employee_number = :employee_number');
+        }
+
+        $statement = $pdo->prepare(
+            'UPDATE employees SET ' . implode(', ', $assignments) . ' WHERE id = :id'
+        );
+
+        $params = self::contactParams($pdo, $data);
+        $params['id'] = $id;
+        $statement->execute($params);
+    }
+
+    private static function contactParams(PDO $pdo, array $data): array
+    {
+        $params = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'organization' => $data['organization'],
+            'title' => $data['title'],
+            'phone' => $data['phone'],
+            'email' => $data['email'],
+            'street' => $data['street'],
+            'city' => $data['city'],
+            'region' => $data['region'],
+            'postal_code' => $data['postal_code'],
+            'country' => $data['country'],
+        ];
+
+        if (self::supportsEmployeeNumber($pdo)) {
+            $params['employee_number'] = $data['employee_number'] ?? null;
+        }
+
+        return $params;
+    }
+
+    private static function columnNames(PDO $pdo): array
+    {
+        $cacheKey = spl_object_id($pdo);
+
+        if (isset(self::$columnCache[$cacheKey])) {
+            return self::$columnCache[$cacheKey];
+        }
+
+        $statement = $pdo->query('SHOW COLUMNS FROM employees');
+        $columns = array_map(
+            static fn (array $column): string => (string) ($column['Field'] ?? ''),
+            $statement->fetchAll()
+        );
+
+        self::$columnCache[$cacheKey] = $columns;
+
+        return $columns;
     }
 }

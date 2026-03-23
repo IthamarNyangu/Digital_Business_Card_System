@@ -1,169 +1,249 @@
-# Right to Care Zambia Digital Business Card System
+# RTCZ Bulk QR Contact Generator
 
-This project is a standalone PHP and MySQL web application for managing digital staff business cards. Each employee gets a random public token, a QR code image, a mobile-friendly public contact page, and a downloadable `.vcf` contact file.
+This project is a standalone PHP and MySQL web application for Right to Care Zambia. An admin can upload a transposed CSV file or enter one contact manually, and the system builds a MECARD payload for each employee and generates a QR code PNG that opens the contact save screen directly on a phone.
 
-## 1. Architecture
+## 1. Updated Architecture
 
-The app uses a simple front-controller pattern:
+The app uses a simple front-controller structure that is easy to test locally first:
 
-- `public/index.php` is the single entry point and router.
-- `config/` stores app and database configuration.
-- `app/Controllers/` handles admin and public routes.
-- `app/Repositories/` contains PDO-based database queries.
-- `app/Services/` handles QR code generation and vCard creation.
-- `app/Views/` contains reusable Bootstrap 5 templates.
+- `public/index.php` is the only web entry point and handles routing.
+- `config/` stores the local-first app and database defaults.
+- `app/Controllers/` contains admin login, dashboard, bulk import, single entry, results, preview, download, and ZIP/PDF export actions.
+- `app/Repositories/` contains PDO queries for admins and imported employee records.
+- `app/Services/TransposedCsvImportService.php` parses the transposed CSV layout.
+- `app/Services/MecardService.php` builds the MECARD QR payload.
+- `app/Services/QrCodeService.php` generates PNG QR files with `chillerlan/php-qrcode`.
+- `app/Views/` contains Bootstrap 5 admin screens for login, dashboard, import, and results.
 - `storage/qrcodes/` stores generated QR code PNG files.
-- `database/` contains the MySQL schema and dummy seed data.
-- `scripts/create_admin.php` creates the first admin user with a hashed password.
+- `public/downloads/sample_contacts_transposed.csv` provides a ready-made CSV example for local testing.
 
-## 2. Folder Structure
+## 2. Updated Database Schema
+
+Use [schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/database/schema.sql) to create the new structure.
+
+- `admins`
+  - `id`
+  - `username`
+  - `password_hash`
+  - `created_at`
+- `employees`
+- `id`
+- `employee_number`
+- `first_name`
+  - `last_name`
+  - `organization`
+  - `title`
+  - `phone`
+  - `email`
+  - `street`
+  - `city`
+  - `region`
+  - `postal_code`
+  - `country`
+  - `mecard_payload`
+  - `qr_code_path`
+  - `created_at`
+  - `updated_at`
+
+Duplicate handling now follows these rules:
+
+- names can repeat
+- `email` is unique
+- `phone` is unique
+- `employee_number` is optional and unique when present
+
+The QR payload does not include `employee_number`, so it stays internal even when saved in the database.
+
+## 3. CSV Import Parser
+
+The parser lives in [TransposedCsvImportService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/TransposedCsvImportService.php).
+
+It does four main things:
+
+1. Reads the uploaded CSV row by row with `fgetcsv()`.
+2. Treats column A as field names and each later column as one employee.
+3. Validates that all required field rows exist.
+4. Skips fully empty employee columns safely.
+
+Required CSV field rows:
+
+- `LastName`
+- `FirstName`
+- `Organization`
+- `Title`
+- `Phone`
+- `Email`
+- `Street`
+- `City`
+- `Region`
+- `PostalCode`
+- `Country`
+
+Optional CSV field row:
+
+- `EmployeeNumber`
+
+## 4. MECARD Builder
+
+[MecardService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/MecardService.php) builds the QR payload in MECARD format. The QR code now stores contact data directly, not a URL.
+
+Example payload shape:
 
 ```text
-config/
-app/
-  Controllers/
-  Core/
-  Repositories/
-  Services/
-  Support/
-  Views/
-database/
-public/
-  assets/css/
-scripts/
-storage/qrcodes/
+MECARD:N:Bwalya,Mary;ORG:Right to Care Zambia;TITLE:Program Manager;TEL:+260 977 123 100;EMAIL:mary.bwalya@righttocare.org.zm;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Program Manager, Right to Care Zambia;;
 ```
 
-## 3. Database Schema
+## 5. QR Generation Service
 
-Use [database/schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/database/schema.sql) to create the database and tables.
+[QrCodeService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/QrCodeService.php) uses `chillerlan/php-qrcode` to generate PNG files in [storage/qrcodes](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/storage/qrcodes).
 
-## 4. Database Connection
+The file naming format is:
 
-Database settings are in [config/database.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/config/database.php). The app reads from environment variables first, then falls back to local defaults:
-
-- `DB_HOST`
-- `DB_PORT`
-- `DB_DATABASE`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-
-The PDO connection is created in [app/Core/Database.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Core/Database.php).
-
-## 5. Authentication
-
-- Admin login uses sessions and `password_verify()`.
-- Password hashes are stored in the `admins` table.
-- CSRF protection is applied to login, logout, save, update, and deactivate forms.
-- Auth logic lives in [app/Core/Auth.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Core/Auth.php) and [app/Controllers/AuthController.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Controllers/AuthController.php).
-
-Create the first admin user after importing the database:
-
-```bash
-php scripts/create_admin.php --username=admin --password=ChangeMe123!
+```text
+first_last_id_qrcode.png
 ```
 
-## 6. Employee CRUD
+Example:
 
-- Employees list: `/admin/employees`
-- Add employee: `/admin/employees/create`
-- Edit employee: `/admin/employees/{id}/edit`
-- Deactivate employee: `/admin/employees/{id}/deactivate`
-- Download QR code: `/admin/employees/{id}/qr`
+```text
+paul_chinyemba_12_qrcode.png
+```
 
-The main CRUD controller is [app/Controllers/EmployeeController.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Controllers/EmployeeController.php).
+## 6. Bulk Import Page
 
-## 7. QR Code Generation
+The upload screen is [import.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Views/employees/import.php).
 
-This app uses `chillerlan/php-qrcode` and stores QR PNG files in `storage/qrcodes/`.
+Routes:
 
-- Composer package: `chillerlan/php-qrcode:^5.0`
-- QR service: [app/Services/QrCodeService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/QrCodeService.php)
-- Public QR URL format: `/c/{token}`
+- `GET /admin/import`
+- `POST /admin/import`
 
-## 8. Public Contact Card
+Single-entry routes:
 
-The public employee contact page is rendered from one reusable template:
+- `GET /admin/contacts/create`
+- `POST /admin/contacts/create`
 
-- View: [app/Views/public/contact.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Views/public/contact.php)
-- Route: `/c/{token}`
+It validates the uploaded CSV file, parses every employee column, validates required fields, and generates QR PNGs only for valid employee records.
 
-If the employee is inactive, the page shows a simple inactive message instead of contact actions.
+## 7. Results Page
 
-## 9. vCard Download
+The results screen is [index.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Views/employees/index.php).
 
-- Route: `/c/{token}/vcf`
-- Service: [app/Services/VCardService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/VCardService.php)
+Routes:
 
-The vCard includes:
+- `GET /admin/results`
+- `GET /admin/employees` as a compatibility alias
 
-- Full name
-- Right to Care Zambia as the organisation
-- Position
-- Work phone
-- Work email
-- Optional department and location
+It shows:
 
-## 10. Dummy Seed Data
+- the latest import summary
+- success and failure counts
+- the employee result table
+- QR preview and download actions
+- a full searchable list of stored contacts
 
-Import [database/seed.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/database/seed.sql) to add 5 sample employees.
+## 8. Single QR Download Action
 
-## 11. Install and Run on Apache, PHP, and MySQL
+Routes:
 
-1. Create the database and tables:
+- `GET /admin/qrcodes/{id}/preview`
+- `GET /admin/qrcodes/{id}/download`
 
-   ```sql
-   SOURCE database/schema.sql;
-   SOURCE database/seed.sql;
-   ```
+These actions are handled in [EmployeeController.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Controllers/EmployeeController.php). Preview streams the PNG inline, while download forces a file download.
 
-2. Install PHP dependencies with Composer:
+## 9. ZIP Bulk Download Action
+
+Route:
+
+- `GET /admin/qrcodes/download-all`
+
+This uses PHP `ZipArchive` to package all generated QR PNG files into a single ZIP download.
+
+## 10. Sample CSV Data
+
+A ready-to-use sample file is available at [sample_contacts_transposed.csv](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/public/downloads/sample_contacts_transposed.csv).
+
+Sample data:
+
+```csv
+EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
+LastName,Bwalya,Malama,Nyangu
+FirstName,Mary,Beatrice,Ithamar
+Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
+Title,Program Manager,Admin Officer,Applications Developer
+Phone,+260 977 123 100,0972448338,0979511258
+Email,mary.bwalya@righttocare.org.zm,beatrice@righttocare-zambia.org,ithamar.nyangu@righttocare-zambia.org
+Street,Plot 12 Addis Ababa Drive,Plot 12 Addis Ababa Drive,Plot 12 Addis Ababa Drive
+City,Lusaka,Lusaka,Lusaka
+Region,Lusaka Province,Lusaka Province,Lusaka Province
+PostalCode,10101,10101,10101
+Country,Zambia,Zambia,Zambia
+```
+
+To save an Excel sheet correctly:
+
+1. Put the field names in column A.
+2. Put each employee in a new column starting from column B.
+3. In Excel, choose `File` > `Save As`.
+4. Pick `CSV UTF-8 (Comma delimited) (*.csv)` if available.
+5. Upload the saved CSV file from the import page.
+
+## 11. Local Testing Setup
+
+This project is now configured for local-first testing.
+
+Default local values:
+
+- `APP_URL=http://127.0.0.1:8000`
+- `DB_HOST=127.0.0.1`
+- `DB_PORT=3306`
+- `DB_DATABASE=rtc_digital_cards`
+- `DB_USERNAME=root`
+- `DB_PASSWORD=` (blank by default for local WAMP-style testing)
+
+Run locally from the project root:
+
+```powershell
+& "C:\wamp64\bin\php\php8.2.26\php.exe" -S 127.0.0.1:8000 -t public
+```
+
+Then open:
+
+- `http://127.0.0.1:8000/admin/login`
+- `http://127.0.0.1:8000/admin/import`
+- `http://127.0.0.1:8000/admin/contacts/create`
+- `http://127.0.0.1:8000/admin/results`
+
+## 12. Install Notes
+
+1. Import [schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/database/schema.sql).
+2. Optionally import [seed.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/database/seed.sql) for sample contacts.
+3. Install dependencies:
 
    ```bash
    composer install
    ```
 
-3. Make sure PHP has these extensions enabled:
-
+4. Make sure PHP has these extensions enabled:
    - `pdo_mysql`
    - `gd`
-   - `mbstring`
-
-4. Point your Apache virtual host or document root to the `public/` folder.
-
-5. Enable Apache `mod_rewrite` so the routes work with [public/.htaccess](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/public/.htaccess).
-
-6. Set your public app URL for correct QR code links:
-
-   - Windows example:
-
-     ```powershell
-     setx APP_URL "http://localhost"
-     ```
-
-   - Linux example:
-
-     ```bash
-     export APP_URL="https://cards.righttocare.org.zm"
-     ```
-
-7. Set your database environment variables or edit [config/database.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/config/database.php).
-
-8. Create the first admin:
+   - `zip`
+   - `mbstring` is recommended, though the app falls back safely for string length checks
+5. Create the first admin:
 
    ```bash
-   php scripts/create_admin.php --username=admin --password=ChangeMe123!
+   php scripts/create_admin.php --username=admin --password=RTCZ2025
    ```
 
-9. Open the admin login page:
+6. After local testing passes, override `APP_URL` and DB settings for the server environment.
 
-   ```text
-   http://your-domain-or-localhost/admin/login
-   ```
+## 13. Optional Employee Number Upgrade
 
-## Notes
+If your current local database was created before the `employee_number` field was added, the app will still work and simply hide that field. To enable it later without rebuilding the whole database, run:
 
-- Inactive employees are not deleted permanently.
-- Public URLs never expose internal employee IDs or employee numbers.
-- QR files are regenerated on create or edit when the employee is active.
-- Bootstrap 5 is loaded from a CDN for quick setup.
+```sql
+ALTER TABLE employees
+    ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
+    ADD UNIQUE KEY uq_employees_employee_number (employee_number),
+    ADD UNIQUE KEY uq_employees_phone (phone);
+```

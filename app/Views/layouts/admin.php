@@ -28,12 +28,13 @@ $sessionTimeoutSeconds = max(60, (int) config('app.session_timeout_seconds', 900
                 <img src="<?= e(path_url('/media/logo1.png')) ?>" alt="Right to Care Zambia" class="brand-logo">
                 <span class="brand-lockup">
                     <span class="brand-kicker">RTCZ</span>
-                    <span class="brand-label">Digital Business Card System</span>
+                    <span class="brand-label">Bulk QR Contact Generator</span>
                 </span>
             </a>
             <div class="d-flex align-items-center gap-3 ms-auto">
                 <a class="nav-link text-white-50" href="<?= e(path_url('/admin/dashboard')) ?>">Dashboard</a>
-                <a class="nav-link text-white-50" href="<?= e(path_url('/admin/employees')) ?>">Employees</a>
+                <a class="nav-link text-white-50" href="<?= e(path_url('/admin/import')) ?>">Import CSV</a>
+                <a class="nav-link text-white-50" href="<?= e(path_url('/admin/results')) ?>">QR Results</a>
                 <form method="POST" action="<?= e(path_url('/admin/logout')) ?>" class="d-inline" id="adminLogoutForm">
                     <?= csrf_field() ?>
                     <input type="hidden" name="logout_reason" value="" id="adminLogoutReason">

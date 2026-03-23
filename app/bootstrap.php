@@ -37,6 +37,13 @@ $GLOBALS['config'] = [
 date_default_timezone_set(config('app.timezone', 'Africa/Lusaka'));
 
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => (bool) config('app.session_cookie_secure', false),
+        'httponly' => true,
+        'samesite' => (string) config('app.session_cookie_samesite', 'Lax'),
+    ]);
     session_name(config('app.session_name', 'rtc_zambia_cards_admin'));
     session_start();
 }

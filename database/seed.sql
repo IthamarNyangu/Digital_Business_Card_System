@@ -1,19 +1,68 @@
 USE rtc_digital_cards;
 
+-- Create an admin with scripts/create_admin.php after importing the schema.
+-- These sample employee records help test the results page locally before CSV import.
 INSERT INTO employees (
-    public_token,
+    employee_number,
     first_name,
     last_name,
-    position,
-    department,
+    organization,
+    title,
     phone,
     email,
-    location,
-    qr_code_path,
-    status
+    street,
+    city,
+    region,
+    postal_code,
+    country,
+    mecard_payload,
+    qr_code_path
 ) VALUES
-('0fd7fba5d96745bda3bc4d4f1fd3171d', 'Mary', 'Bwalya', 'Program Manager', 'Programs', '+260 977 123 100', 'mary.bwalya@righttocare.org.zm', 'Lusaka Office', NULL, 'active'),
-('4f2f458bd1b54af58731632c617d4ca0', 'Joseph', 'Tembo', 'Monitoring and Evaluation Officer', 'M&E', '+260 977 123 101', 'joseph.tembo@righttocare.org.zm', 'Ndola Office', NULL, 'active'),
-('71b4a2ce938c4c4497e3c19744f50416', 'Ruth', 'Phiri', 'HR Business Partner', 'Human Resources', '+260 977 123 102', 'ruth.phiri@righttocare.org.zm', 'Kitwe Office', NULL, 'active'),
-('96b2130f62294d9ca8f5e591b70e4df5', 'Peter', 'Zulu', 'Finance Officer', 'Finance', '+260 977 123 103', 'peter.zulu@righttocare.org.zm', 'Chipata Office', NULL, 'active'),
-('c197407d36cf47bd89fe15f7f7b3ab16', 'Agnes', 'Sikazwe', 'Clinical Mentor', 'Clinical Services', '+260 977 123 104', 'agnes.sikazwe@righttocare.org.zm', 'Livingstone Office', NULL, 'inactive');
+(
+    'RTCZ001',
+    'Mary',
+    'Bwalya',
+    'Right to Care Zambia',
+    'Program Manager',
+    '+260 977 123 100',
+    'mary.bwalya@righttocare.org.zm',
+    'Plot 12 Addis Ababa Drive',
+    'Lusaka',
+    'Lusaka Province',
+    '10101',
+    'Zambia',
+    'MECARD:N:Bwalya,Mary;ORG:Right to Care Zambia;TITLE:Program Manager;TEL:+260 977 123 100;EMAIL:mary.bwalya@righttocare.org.zm;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Program Manager, Right to Care Zambia;;',
+    NULL
+),
+(
+    'RTCZ002',
+    'Beatrice',
+    'Malama',
+    'Right to Care Zambia',
+    'Admin Officer',
+    '0972448338',
+    'beatrice@righttocare-zambia.org',
+    'Plot 12 Addis Ababa Drive',
+    'Lusaka',
+    'Lusaka Province',
+    '10101',
+    'Zambia',
+    'MECARD:N:Malama,Beatrice;ORG:Right to Care Zambia;TITLE:Admin Officer;TEL:0972448338;EMAIL:beatrice@righttocare-zambia.org;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Admin Officer, Right to Care Zambia;;',
+    NULL
+),
+(
+    'RTCZ003',
+    'Ithamar',
+    'Nyangu',
+    'Right to Care Zambia',
+    'Applications Developer',
+    '0979511258',
+    'ithamar.nyangu@righttocare-zambia.org',
+    'Plot 12 Addis Ababa Drive',
+    'Lusaka',
+    'Lusaka Province',
+    '10101',
+    'Zambia',
+    'MECARD:N:Nyangu,Ithamar;ORG:Right to Care Zambia;TITLE:Applications Developer;TEL:0979511258;EMAIL:ithamar.nyangu@righttocare-zambia.org;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Applications Developer, Right to Care Zambia;;',
+    NULL
+);
