@@ -7,9 +7,9 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Csrf;
 use App\Repositories\EmployeeRepository;
-use App\Services\MecardService;
 use App\Services\QrCodeService;
 use App\Services\TransposedCsvImportService;
+use App\Services\VcardService;
 use App\Support\Validator;
 use RuntimeException;
 use Throwable;
@@ -51,6 +51,7 @@ class EmployeeController
             'supportsEmployeeNumber' => EmployeeRepository::supportsEmployeeNumber($pdo),
             'employee' => [
                 'employee_number' => '',
+                'honorific' => '',
                 'first_name' => '',
                 'last_name' => '',
                 'organization' => config('app.organisation_name'),
@@ -87,7 +88,7 @@ class EmployeeController
         }
 
         $pdo = db();
-        $mecardService = new MecardService();
+        $vcardService = new VcardService();
         $qrCodeService = new QrCodeService();
         $summary = [
             'processed_columns' => count($parsed['employees']),
@@ -102,7 +103,11 @@ class EmployeeController
         foreach ($parsed['employees'] as $record) {
             $payload = Validator::importedEmployeePayload($record['data']);
             $errors = Validator::importedEmployee($payload);
-            $fullName = trim($payload['first_name'] . ' ' . $payload['last_name']);
+            $fullName = trim(implode(' ', array_filter([
+                $payload['honorific'] ?? '',
+                $payload['first_name'],
+                $payload['last_name'],
+            ])));
 
             if ($errors !== []) {
                 $summary['failure_count']++;
@@ -122,18 +127,25 @@ class EmployeeController
                     throw new RuntimeException('The employee record could not be loaded after saving.');
                 }
 
-                $mecardPayload = $mecardService->build($employee);
-                $employee['mecard_payload'] = $mecardPayload;
-                $qrCodePath = $qrCodeService->generateForEmployee($employee);
+                $employeeForPayload = array_merge($employee, [
+                    'honorific' => $payload['honorific'] ?? ($employee['honorific'] ?? null),
+                ]);
+                $contactPayload = $vcardService->build($employeeForPayload);
+                $employeeForPayload['mecard_payload'] = $contactPayload;
+                $qrCodePath = $qrCodeService->generateForEmployee($employeeForPayload);
 
-                EmployeeRepository::updateGeneratedAssets($pdo, (int) $employee['id'], $mecardPayload, $qrCodePath);
+                EmployeeRepository::updateGeneratedAssets($pdo, (int) $employee['id'], $contactPayload, $qrCodePath);
 
                 $summary['success_count']++;
                 $summary[$result['action'] . '_count']++;
                 $summary['results'][] = [
                     'id' => (int) $employee['id'],
                     'column_label' => $record['column_label'],
-                    'name' => trim($employee['first_name'] . ' ' . $employee['last_name']),
+                    'name' => trim(implode(' ', array_filter([
+                        $employeeForPayload['honorific'] ?? '',
+                        $employee['first_name'],
+                        $employee['last_name'],
+                    ]))),
                     'organization' => $employee['organization'],
                     'title' => $employee['title'],
                     'email' => $employee['email'],
@@ -216,11 +228,14 @@ class EmployeeController
                 throw new RuntimeException('The contact could not be loaded after saving.');
             }
 
-            $mecardPayload = (new MecardService())->build($employee);
-            $employee['mecard_payload'] = $mecardPayload;
-            $qrCodePath = (new QrCodeService())->generateForEmployee($employee);
+            $employeeForPayload = array_merge($employee, [
+                'honorific' => $payload['honorific'] ?? ($employee['honorific'] ?? null),
+            ]);
+            $contactPayload = (new VcardService())->build($employeeForPayload);
+            $employeeForPayload['mecard_payload'] = $contactPayload;
+            $qrCodePath = (new QrCodeService())->generateForEmployee($employeeForPayload);
 
-            EmployeeRepository::updateGeneratedAssets($pdo, (int) $employee['id'], $mecardPayload, $qrCodePath);
+            EmployeeRepository::updateGeneratedAssets($pdo, (int) $employee['id'], $contactPayload, $qrCodePath);
 
             clear_old_input();
             flash('success', 'Contact created successfully.');
@@ -368,20 +383,20 @@ class EmployeeController
     private function ensureQrAsset(array $employee): array
     {
         $qrCodePath = (string) ($employee['qr_code_path'] ?? '');
+        $contactPayload = (string) ($employee['mecard_payload'] ?? '');
+        $isVcardPayload = str_starts_with($contactPayload, 'BEGIN:VCARD');
 
-        if ($qrCodePath !== '' && is_file(base_path($qrCodePath))) {
+        if ($isVcardPayload && $qrCodePath !== '' && is_file(base_path($qrCodePath))) {
             return $employee;
         }
 
-        $mecardPayload = (string) ($employee['mecard_payload'] ?? '');
-
-        if ($mecardPayload === '') {
-            $mecardPayload = (new MecardService())->build($employee);
+        if (!$isVcardPayload) {
+            $contactPayload = (new VcardService())->build($employee);
         }
 
-        $employee['mecard_payload'] = $mecardPayload;
+        $employee['mecard_payload'] = $contactPayload;
         $qrCodePath = (new QrCodeService())->generateForEmployee($employee);
-        EmployeeRepository::updateGeneratedAssets(db(), (int) $employee['id'], $mecardPayload, $qrCodePath);
+        EmployeeRepository::updateGeneratedAssets(db(), (int) $employee['id'], $contactPayload, $qrCodePath);
         $employee['qr_code_path'] = $qrCodePath;
 
         return $employee;
@@ -414,6 +429,7 @@ class EmployeeController
         fputcsv($handle, [
             'ID',
             'Employee Number',
+            'Honorific',
             'First Name',
             'Last Name',
             'Organization',
@@ -432,6 +448,7 @@ class EmployeeController
             fputcsv($handle, [
                 $employee['id'],
                 $employee['employee_number'] ?? '',
+                $employee['honorific'] ?? '',
                 $employee['first_name'],
                 $employee['last_name'],
                 $employee['organization'],
@@ -463,7 +480,7 @@ class EmployeeController
             '',
             'Contents:',
             '- employee_list.csv contains the employee details and the matching QR filename.',
-            '- qr-codes/ contains one MECARD QR PNG per employee.',
+            '- qr-codes/ contains one vCard QR PNG per employee.',
             '',
             'Tip: open employee_list.csv in Excel if you need the contact register together with the QR image filenames.',
         ]);

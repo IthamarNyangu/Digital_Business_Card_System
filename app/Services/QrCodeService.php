@@ -10,10 +10,10 @@ class QrCodeService
 {
     public function generateForEmployee(array $employee): string
     {
-        $mecardPayload = (string) ($employee['mecard_payload'] ?? '');
+        $contactPayload = (string) ($employee['mecard_payload'] ?? '');
 
-        if ($mecardPayload === '') {
-            throw new RuntimeException('The MECARD payload is missing, so the QR code cannot be generated.');
+        if ($contactPayload === '') {
+            throw new RuntimeException('The contact payload is missing, so the QR code cannot be generated.');
         }
 
         $relativePath = 'storage/qrcodes/' . $this->buildFilename($employee);
@@ -28,7 +28,7 @@ class QrCodeService
             }
         }
 
-        $this->generatePng($mecardPayload, $absolutePath);
+        $this->generatePng($contactPayload, $absolutePath);
 
         return $relativePath;
     }

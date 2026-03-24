@@ -4,6 +4,7 @@ USE rtc_digital_cards;
 -- These sample employee records help test the results page locally before CSV import.
 INSERT INTO employees (
     employee_number,
+    honorific,
     first_name,
     last_name,
     organization,
@@ -20,6 +21,7 @@ INSERT INTO employees (
 ) VALUES
 (
     'RTCZ001',
+    'Ms.',
     'Mary',
     'Bwalya',
     'Right to Care Zambia',
@@ -31,11 +33,12 @@ INSERT INTO employees (
     'Lusaka Province',
     '10101',
     'Zambia',
-    'MECARD:N:Bwalya,Mary;ORG:Right to Care Zambia;TITLE:Program Manager;TEL:+260 977 123 100;EMAIL:mary.bwalya@righttocare.org.zm;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Program Manager, Right to Care Zambia;;',
+    NULL,
     NULL
 ),
 (
     'RTCZ002',
+    'Mrs.',
     'Beatrice',
     'Malama',
     'Right to Care Zambia',
@@ -47,11 +50,12 @@ INSERT INTO employees (
     'Lusaka Province',
     '10101',
     'Zambia',
-    'MECARD:N:Malama,Beatrice;ORG:Right to Care Zambia;TITLE:Admin Officer;TEL:0972448338;EMAIL:beatrice@righttocare-zambia.org;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Admin Officer, Right to Care Zambia;;',
+    NULL,
     NULL
 ),
 (
     'RTCZ003',
+    'Mr.',
     'Ithamar',
     'Nyangu',
     'Right to Care Zambia',
@@ -63,6 +67,6 @@ INSERT INTO employees (
     'Lusaka Province',
     '10101',
     'Zambia',
-    'MECARD:N:Nyangu,Ithamar;ORG:Right to Care Zambia;TITLE:Applications Developer;TEL:0979511258;EMAIL:ithamar.nyangu@righttocare-zambia.org;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Applications Developer, Right to Care Zambia;;',
+    NULL,
     NULL
 );

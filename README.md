@@ -1,6 +1,6 @@
 # RTCZ Bulk QR Contact Generator
 
-This project is a standalone PHP and MySQL web application for Right to Care Zambia. An admin can upload a transposed CSV file or enter one contact manually, and the system builds a MECARD payload for each employee and generates a QR code PNG that opens the contact save screen directly on a phone.
+This project is a standalone PHP and MySQL web application for Right to Care Zambia. An admin can upload a transposed CSV file or enter one contact manually, and the system builds a vCard payload for each employee and generates a QR code PNG that opens the contact save screen directly on a phone.
 
 For a fuller handover guide, see [SYSTEM_DOCUMENTATION.md](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/docs/SYSTEM_DOCUMENTATION.md).
 
@@ -13,7 +13,7 @@ The app uses a simple front-controller structure that is easy to test locally fi
 - `app/Controllers/` contains admin login, dashboard, bulk import, single entry, results, preview, download, and ZIP/PDF export actions.
 - `app/Repositories/` contains PDO queries for admins and imported employee records.
 - `app/Services/TransposedCsvImportService.php` parses the transposed CSV layout.
-- `app/Services/MecardService.php` builds the MECARD QR payload.
+- `app/Services/VcardService.php` builds the vCard QR payload.
 - `app/Services/QrCodeService.php` generates PNG QR files with `chillerlan/php-qrcode`.
 - `app/Views/` contains Bootstrap 5 admin screens for login, dashboard, import, and results.
 - `storage/qrcodes/` stores generated QR code PNG files.
@@ -31,6 +31,7 @@ Use [schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_Sys
 - `employees`
 - `id`
 - `employee_number`
+- `honorific`
 - `first_name`
   - `last_name`
   - `organization`
@@ -42,7 +43,7 @@ Use [schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_Sys
   - `region`
   - `postal_code`
   - `country`
-  - `mecard_payload`
+  - `mecard_payload` (legacy-named payload storage column)
   - `qr_code_path`
   - `created_at`
   - `updated_at`
@@ -54,7 +55,7 @@ Duplicate handling now follows these rules:
 - `phone` is unique
 - `employee_number` is optional and unique when present
 
-The QR payload does not include `employee_number`, so it stays internal even when saved in the database.
+The QR payload does not include `employee_number`, so it stays internal even when saved in the database. The optional `honorific` value can be included in the QR so phones that support prefixes store it separately from the contact name.
 
 ## 3. CSV Import Parser
 
@@ -84,15 +85,26 @@ Required CSV field rows:
 Optional CSV field row:
 
 - `EmployeeNumber`
+- `Honorific`
 
-## 4. MECARD Builder
+## 4. vCard Builder
 
-[MecardService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/MecardService.php) builds the QR payload in MECARD format. The QR code now stores contact data directly, not a URL.
+[VcardService.php](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/app/Services/VcardService.php) builds the QR payload in vCard format. The QR code stores contact data directly, not a URL.
 
 Example payload shape:
 
 ```text
-MECARD:N:Bwalya,Mary;ORG:Right to Care Zambia;TITLE:Program Manager;TEL:+260 977 123 100;EMAIL:mary.bwalya@righttocare.org.zm;ADR:Plot 12 Addis Ababa Drive,Lusaka,Lusaka Province,10101,Zambia;NOTE:Program Manager, Right to Care Zambia;;
+BEGIN:VCARD
+VERSION:3.0
+FN:Ms. Mary Bwalya
+N:Bwalya;Mary;;Ms.;
+ORG:Right to Care Zambia
+TITLE:Program Manager
+TEL;TYPE=CELL,VOICE:+260 977 123 100
+EMAIL;TYPE=INTERNET:mary.bwalya@righttocare.org.zm
+ADR;TYPE=WORK:;;Plot 12 Addis Ababa Drive;Lusaka;Lusaka Province;10101;Zambia
+URL:https://righttocare-zambia.org/
+END:VCARD
 ```
 
 ## 5. QR Generation Service
@@ -169,6 +181,7 @@ Sample data:
 
 ```csv
 EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
+Honorific,Ms.,Mrs.,Mr.
 LastName,Bwalya,Malama,Nyangu
 FirstName,Mary,Beatrice,Ithamar
 Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
@@ -241,11 +254,12 @@ Then open:
 
 ## 13. Optional Employee Number Upgrade
 
-If your current local database was created before the `employee_number` field was added, the app will still work and simply hide that field. To enable it later without rebuilding the whole database, run:
+If your current local database was created before the `employee_number` and `honorific` fields were added, the app will still work. To enable them later without rebuilding the whole database, run:
 
 ```sql
 ALTER TABLE employees
     ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
+    ADD COLUMN honorific VARCHAR(20) NULL AFTER employee_number,
     ADD UNIQUE KEY uq_employees_employee_number (employee_number),
     ADD UNIQUE KEY uq_employees_phone (phone);
 ```

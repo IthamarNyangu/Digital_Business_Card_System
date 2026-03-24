@@ -16,7 +16,7 @@
             <article class="print-card">
                 <div class="print-card-top">
                     <div>
-                        <h2 class="print-card-name"><?= e($employee['first_name'] . ' ' . $employee['last_name']) ?></h2>
+                        <h2 class="print-card-name"><?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name']])))) ?></h2>
                         <p class="print-card-role"><?= e($employee['title']) ?></p>
                         <p class="print-card-org"><?= e($employee['organization']) ?></p>
                     </div>

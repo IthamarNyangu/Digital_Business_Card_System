@@ -11,7 +11,7 @@ Its purpose is to:
 - support both bulk employee uploads and one-off contact creation
 - give administrators a simple way to preview, download, print, and package QR codes
 
-Unlike a URL-based QR system, this version stores the contact data directly inside each QR code using MECARD format. Once a QR image has been generated, it can be printed or shared and scanned even when the server or PC is offline.
+Unlike a URL-based QR system, this version stores the contact data directly inside each QR code using vCard format. Once a QR image has been generated, it can be printed or shared and scanned even when the server or PC is offline.
 
 ## 2. Business Logic
 
@@ -49,7 +49,7 @@ Important:
 
 ## 3. QR Technology Used
 
-This system uses **MECARD QR codes**.
+This system uses **vCard QR codes**.
 
 That means:
 
@@ -136,6 +136,7 @@ The ZIP package contains:
 The system stores these fields per employee:
 
 - `employee_number` (optional internal identifier)
+- `honorific` (optional prefix such as Mr., Mrs., Ms., or Dr.)
 - `first_name`
 - `last_name`
 - `organization`
@@ -147,7 +148,7 @@ The system stores these fields per employee:
 - `region`
 - `postal_code`
 - `country`
-- `mecard_payload`
+- `mecard_payload` (legacy-named payload storage column)
 - `qr_code_path`
 
 Important:
@@ -163,6 +164,7 @@ Example:
 
 ```csv
 EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
+Honorific,Ms.,Mrs.,Mr.
 LastName,Bwalya,Malama,Nyangu
 FirstName,Mary,Beatrice,Ithamar
 Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
@@ -193,6 +195,7 @@ Required field rows:
 Optional field row:
 
 - `EmployeeNumber`
+- `Honorific`
 
 ## 8. How to Save the Excel File as CSV
 
@@ -253,8 +256,8 @@ storage/qrcodes/
 
 - `TransposedCsvImportService`
   - parses uploaded CSV files
-- `MecardService`
-  - builds the MECARD payload
+- `VcardService`
+  - builds the vCard payload
 - `QrCodeService`
   - generates the PNG QR image
 
@@ -297,7 +300,7 @@ For your Windows Apache setup, the project has been prepared for:
 
 Important:
 
-- this MECARD version does not need the public URL for the QR to work after generation
+- this vCard version does not need the public URL for the QR to work after generation
 - the public/internal URL matters mainly for accessing the admin app in the browser
 
 ## 14. PHP Requirements
@@ -336,7 +339,7 @@ Check:
 
 - the image is clear
 - the QR is not compressed too heavily by a messaging app
-- the phone camera or QR scanner supports MECARD contacts
+- the phone camera or QR scanner supports vCard contacts
 
 ### Problem: QR works locally but not through server URL
 
@@ -349,15 +352,16 @@ Remember:
 
 That was earlier caused by update-style duplicate handling. The current version is designed to block duplicate identifiers instead.
 
-### Problem: Employee number field does not appear
+### Problem: Employee number or honorific field does not appear
 
-Your database may not yet have the optional `employee_number` column. The app will still work without it.
+Your database may not yet have the optional `employee_number` and `honorific` columns. The app will still work without them.
 
 To enable it later:
 
 ```sql
 ALTER TABLE employees
     ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
+    ADD COLUMN honorific VARCHAR(20) NULL AFTER employee_number,
     ADD UNIQUE KEY uq_employees_employee_number (employee_number),
     ADD UNIQUE KEY uq_employees_phone (phone);
 ```
@@ -375,14 +379,14 @@ Less ideal if:
 - staff contact details change very often
 - printed QR cards are expected to remain valid forever without reprint
 
-In those cases, a token URL QR model is more flexible than a direct MECARD QR model.
+In those cases, a token URL QR model is more flexible than a direct vCard QR model.
 
 ## 18. Summary
 
 This system is best described as:
 
 - a bulk and single-entry QR contact generator
-- using MECARD QR technology
+- using vCard QR technology
 - optimized for offline scanning
 - protected against accidental duplicate replacement
 - designed for simple PHP + MySQL + Apache hosting

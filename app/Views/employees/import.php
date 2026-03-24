@@ -1,7 +1,7 @@
 <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
     <div>
         <h1 class="h2 mb-1">Bulk Import CSV</h1>
-        <p class="text-muted mb-0">Upload a transposed CSV and the system will generate one MECARD QR code per employee column while blocking duplicate phone numbers, emails, and employee numbers.</p>
+        <p class="text-muted mb-0">Upload a transposed CSV and the system will generate one vCard QR code per employee column while blocking duplicate phone numbers, emails, and employee numbers.</p>
     </div>
     <a href="<?= e(path_url('/admin/results')) ?>" class="btn btn-primary dashboard-btn dashboard-btn-secondary">View Results</a>
 </div>
@@ -13,7 +13,7 @@
                 <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
                     <div>
                         <h2 class="h5 mb-1">Upload CSV File</h2>
-                        <p class="text-muted mb-0">Column A must contain the field names. Every column after A becomes one employee contact and one QR code image, but duplicate identifiers are rejected instead of replacing an existing person.</p>
+                        <p class="text-muted mb-0">Column A must contain the field names. Every column after A becomes one employee contact and one QR code image, but duplicate identifiers are rejected instead of replacing an existing person. The Right to Care Zambia website is added automatically to every generated QR.</p>
                     </div>
                     <a href="<?= e(path_url('/admin/contacts/create')) ?>" class="btn btn-primary dashboard-btn dashboard-btn-secondary">Add One Contact</a>
                 </div>
@@ -60,6 +60,7 @@
 
                 <div class="sample-csv-shell">
 <pre class="sample-csv-preview mb-0">EmployeeNumber,RTCZ001,RTCZ002
+Honorific,Ms.,Mrs.
 LastName,Bwalya,Malama
 FirstName,Mary,Beatrice
 Organization,Right to Care Zambia,Right to Care Zambia

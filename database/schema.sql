@@ -17,6 +17,7 @@ CREATE TABLE admins (
 CREATE TABLE employees (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_number VARCHAR(50) NULL,
+    honorific VARCHAR(20) NULL,
     first_name VARCHAR(80) NOT NULL,
     last_name VARCHAR(80) NOT NULL,
     organization VARCHAR(150) NOT NULL,

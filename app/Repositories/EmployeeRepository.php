@@ -36,6 +36,11 @@ class EmployeeRepository
         return in_array('employee_number', self::columnNames($pdo), true);
     }
 
+    public static function supportsHonorific(PDO $pdo): bool
+    {
+        return in_array('honorific', self::columnNames($pdo), true);
+    }
+
     private static function searchColumns(): array
     {
         return [
@@ -260,19 +265,19 @@ class EmployeeRepository
         ];
     }
 
-    public static function updateGeneratedAssets(PDO $pdo, int $id, string $mecardPayload, string $qrCodePath): void
+    public static function updateGeneratedAssets(PDO $pdo, int $id, string $contactPayload, string $qrCodePath): void
     {
         $statement = $pdo->prepare('
             UPDATE employees
             SET
-                mecard_payload = :mecard_payload,
+                mecard_payload = :contact_payload,
                 qr_code_path = :qr_code_path
             WHERE id = :id
         ');
 
         $statement->execute([
             'id' => $id,
-            'mecard_payload' => $mecardPayload,
+            'contact_payload' => $contactPayload,
             'qr_code_path' => $qrCodePath,
         ]);
     }
@@ -292,6 +297,10 @@ class EmployeeRepository
             'postal_code',
             'country',
         ];
+
+        if (self::supportsHonorific($pdo)) {
+            array_splice($columns, 1, 0, 'honorific');
+        }
 
         if (self::supportsEmployeeNumber($pdo)) {
             array_unshift($columns, 'employee_number');
@@ -325,6 +334,10 @@ class EmployeeRepository
             'country = :country',
         ];
 
+        if (self::supportsHonorific($pdo)) {
+            array_splice($assignments, 1, 0, 'honorific = :honorific');
+        }
+
         if (self::supportsEmployeeNumber($pdo)) {
             array_unshift($assignments, 'employee_number = :employee_number');
         }
@@ -353,6 +366,10 @@ class EmployeeRepository
             'postal_code' => $data['postal_code'],
             'country' => $data['country'],
         ];
+
+        if (self::supportsHonorific($pdo)) {
+            $params['honorific'] = $data['honorific'] ?? null;
+        }
 
         if (self::supportsEmployeeNumber($pdo)) {
             $params['employee_number'] = $data['employee_number'] ?? null;
