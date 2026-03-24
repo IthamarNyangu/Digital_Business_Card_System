@@ -1,7 +1,7 @@
 <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
     <div>
         <h1 class="h2 mb-1">QR Results</h1>
-        <p class="text-muted mb-0">Each saved contact must have a unique email and phone number. Duplicates are listed as failures instead of silently replacing another employee.</p>
+    
     </div>
     <div class="d-flex flex-column flex-sm-row gap-2">
         <a href="<?= e(path_url('/admin/import')) ?>" class="btn btn-primary dashboard-btn">Upload New CSV</a>

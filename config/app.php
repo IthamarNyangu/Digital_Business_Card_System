@@ -3,7 +3,7 @@
 return [
     'app_name' => 'RTCZ Bulk QR Contact Generator',
     'organisation_name' => 'Right to Care Zambia',
-    'base_url' => rtrim(getenv('APP_URL') ?: 'http://127.0.0.1:8000', '/'),
+    'base_url' => rtrim(getenv('APP_URL') ?: 'http://160.242.60.31/Digital_Business_Card_System/public', '/'),
     'timezone' => getenv('APP_TIMEZONE') ?: 'Africa/Lusaka',
     'session_name' => getenv('APP_SESSION_NAME') ?: 'rtc_zambia_cards_admin',
     'session_cookie_secure' => filter_var(

@@ -2,6 +2,8 @@
 
 This project is a standalone PHP and MySQL web application for Right to Care Zambia. An admin can upload a transposed CSV file or enter one contact manually, and the system builds a MECARD payload for each employee and generates a QR code PNG that opens the contact save screen directly on a phone.
 
+For a fuller handover guide, see [SYSTEM_DOCUMENTATION.md](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_System/docs/SYSTEM_DOCUMENTATION.md).
+
 ## 1. Updated Architecture
 
 The app uses a simple front-controller structure that is easy to test locally first:
