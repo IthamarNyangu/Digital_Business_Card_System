@@ -49,9 +49,11 @@ class EmployeeController
         render('employees/form', [
             'pageTitle' => 'Add Single Contact',
             'supportsEmployeeNumber' => EmployeeRepository::supportsEmployeeNumber($pdo),
+            'supportsSuffix' => EmployeeRepository::supportsSuffix($pdo),
             'employee' => [
                 'employee_number' => '',
                 'honorific' => '',
+                'suffix' => '',
                 'first_name' => '',
                 'last_name' => '',
                 'organization' => config('app.organisation_name'),
@@ -107,6 +109,7 @@ class EmployeeController
                 $payload['honorific'] ?? '',
                 $payload['first_name'],
                 $payload['last_name'],
+                $payload['suffix'] ?? '',
             ])));
 
             if ($errors !== []) {
@@ -129,6 +132,7 @@ class EmployeeController
 
                 $employeeForPayload = array_merge($employee, [
                     'honorific' => $payload['honorific'] ?? ($employee['honorific'] ?? null),
+                    'suffix' => $payload['suffix'] ?? ($employee['suffix'] ?? null),
                 ]);
                 $contactPayload = $vcardService->build($employeeForPayload);
                 $employeeForPayload['mecard_payload'] = $contactPayload;
@@ -145,6 +149,7 @@ class EmployeeController
                         $employeeForPayload['honorific'] ?? '',
                         $employee['first_name'],
                         $employee['last_name'],
+                        $employeeForPayload['suffix'] ?? '',
                     ]))),
                     'organization' => $employee['organization'],
                     'title' => $employee['title'],
@@ -230,6 +235,7 @@ class EmployeeController
 
             $employeeForPayload = array_merge($employee, [
                 'honorific' => $payload['honorific'] ?? ($employee['honorific'] ?? null),
+                'suffix' => $payload['suffix'] ?? ($employee['suffix'] ?? null),
             ]);
             $contactPayload = (new VcardService())->build($employeeForPayload);
             $employeeForPayload['mecard_payload'] = $contactPayload;
@@ -430,6 +436,7 @@ class EmployeeController
             'ID',
             'Employee Number',
             'Honorific',
+            'Suffix',
             'First Name',
             'Last Name',
             'Organization',
@@ -449,6 +456,7 @@ class EmployeeController
                 $employee['id'],
                 $employee['employee_number'] ?? '',
                 $employee['honorific'] ?? '',
+                $employee['suffix'] ?? '',
                 $employee['first_name'],
                 $employee['last_name'],
                 $employee['organization'],

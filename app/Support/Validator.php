@@ -50,6 +50,7 @@ class Validator
         return [
             'employee_number' => self::nullableString($input['employee_number'] ?? null),
             'honorific' => self::nullableString($input['honorific'] ?? null),
+            'suffix' => self::nullableString($input['suffix'] ?? null),
             'first_name' => trim((string) ($input['first_name'] ?? '')),
             'last_name' => trim((string) ($input['last_name'] ?? '')),
             'organization' => trim((string) ($input['organization'] ?? '')),
@@ -97,6 +98,10 @@ class Validator
 
         if (($input['honorific'] ?? null) !== null && self::stringLength($input['honorific']) > 20) {
             $errors['honorific'] = 'Honorific must be 20 characters or less.';
+        }
+
+        if (($input['suffix'] ?? null) !== null && self::stringLength($input['suffix']) > 30) {
+            $errors['suffix'] = 'Suffix must be 30 characters or less.';
         }
 
         if (($input['last_name'] ?? '') !== '' && self::stringLength($input['last_name']) > 80) {

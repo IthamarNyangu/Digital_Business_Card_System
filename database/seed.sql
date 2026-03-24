@@ -5,6 +5,7 @@ USE rtc_digital_cards;
 INSERT INTO employees (
     employee_number,
     honorific,
+    suffix,
     first_name,
     last_name,
     organization,
@@ -22,6 +23,7 @@ INSERT INTO employees (
 (
     'RTCZ001',
     'Ms.',
+    NULL,
     'Mary',
     'Bwalya',
     'Right to Care Zambia',
@@ -39,6 +41,7 @@ INSERT INTO employees (
 (
     'RTCZ002',
     'Mrs.',
+    NULL,
     'Beatrice',
     'Malama',
     'Right to Care Zambia',
@@ -56,6 +59,7 @@ INSERT INTO employees (
 (
     'RTCZ003',
     'Mr.',
+    NULL,
     'Ithamar',
     'Nyangu',
     'Right to Care Zambia',

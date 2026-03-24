@@ -9,9 +9,10 @@ class VcardService
     public function build(array $employee): string
     {
         $honorific = trim((string) ($employee['honorific'] ?? ''));
+        $suffix = trim((string) ($employee['suffix'] ?? ''));
         $firstName = trim((string) ($employee['first_name'] ?? ''));
         $lastName = trim((string) ($employee['last_name'] ?? ''));
-        $fullName = trim(implode(' ', array_filter([$honorific, $firstName, $lastName])));
+        $fullName = trim(implode(' ', array_filter([$honorific, $firstName, $lastName, $suffix])));
         $organization = trim((string) ($employee['organization'] ?? config('app.organisation_name', '')));
         $title = trim((string) ($employee['title'] ?? $employee['position'] ?? ''));
         $phone = trim((string) ($employee['phone'] ?? ''));
@@ -29,7 +30,8 @@ class VcardService
             'FN:' . $this->escapeText($fullName !== '' ? $fullName : trim($firstName . ' ' . $lastName)),
             'N:' . $this->escapeText($lastName) . ';'
                 . $this->escapeText($firstName) . ';;'
-                . $this->escapeText($honorific) . ';',
+                . $this->escapeText($honorific) . ';'
+                . $this->escapeText($suffix),
             'ORG:' . $this->escapeText($organization),
         ];
 

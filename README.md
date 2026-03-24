@@ -32,6 +32,7 @@ Use [schema.sql](/c:/Users/Inyangu/Desktop/Development/Digital_Business_Card_Sys
 - `id`
 - `employee_number`
 - `honorific`
+- `suffix`
 - `first_name`
   - `last_name`
   - `organization`
@@ -55,7 +56,7 @@ Duplicate handling now follows these rules:
 - `phone` is unique
 - `employee_number` is optional and unique when present
 
-The QR payload does not include `employee_number`, so it stays internal even when saved in the database. The optional `honorific` value can be included in the QR so phones that support prefixes store it separately from the contact name.
+The QR payload does not include `employee_number`, so it stays internal even when saved in the database. The optional `honorific` and `suffix` values can be included in the QR so phones that support structured name fields save them more cleanly.
 
 ## 3. CSV Import Parser
 
@@ -86,6 +87,7 @@ Optional CSV field row:
 
 - `EmployeeNumber`
 - `Honorific`
+- `Suffix`
 
 ## 4. vCard Builder
 
@@ -182,6 +184,7 @@ Sample data:
 ```csv
 EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
 Honorific,Ms.,Mrs.,Mr.
+Suffix,,,III
 LastName,Bwalya,Malama,Nyangu
 FirstName,Mary,Beatrice,Ithamar
 Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
@@ -254,12 +257,13 @@ Then open:
 
 ## 13. Optional Employee Number Upgrade
 
-If your current local database was created before the `employee_number` and `honorific` fields were added, the app will still work. To enable them later without rebuilding the whole database, run:
+If your current local database was created before the `employee_number`, `honorific`, and `suffix` fields were added, the app will still work. To enable them later without rebuilding the whole database, run:
 
 ```sql
 ALTER TABLE employees
     ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
     ADD COLUMN honorific VARCHAR(20) NULL AFTER employee_number,
+    ADD COLUMN suffix VARCHAR(30) NULL AFTER honorific,
     ADD UNIQUE KEY uq_employees_employee_number (employee_number),
     ADD UNIQUE KEY uq_employees_phone (phone);
 ```

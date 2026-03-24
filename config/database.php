@@ -5,6 +5,6 @@ return [
     'port' => getenv('DB_PORT') ?: '3306',
     'database' => getenv('DB_DATABASE') ?: 'rtc_digital_cards',
     'username' => getenv('DB_USERNAME') ?: 'root',
-    'password' => getenv('DB_PASSWORD') ?: 'RTCZ2025',
+    'password' => getenv('DB_PASSWORD') ?: '',
     'charset' => 'utf8mb4',
 ];

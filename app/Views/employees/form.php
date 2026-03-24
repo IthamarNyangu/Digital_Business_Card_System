@@ -1,7 +1,7 @@
 <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
     <div>
         <h1 class="h2 mb-1">Add Single Contact</h1>
-        <p class="text-muted mb-0">Use this form for one-off additions. If the email, phone, or employee number already exists, the save will be blocked so another employee is not overwritten by mistake. The Right to Care Zambia website is added to every QR automatically.</p>
+    
     </div>
     <div class="d-flex flex-column flex-sm-row gap-2">
         <a href="<?= e(path_url('/admin/import')) ?>" class="btn btn-primary dashboard-btn dashboard-btn-secondary">Bulk Import CSV</a>
@@ -41,11 +41,29 @@
                     value="<?= e(old('honorific', $employee['honorific'] ?? '')) ?>"
                     placeholder="Mr., Mrs., Ms., Dr."
                 >
-                <div class="form-text">Optional. Phones that support structured contact prefixes can save this separately from the visible name.</div>
+               
                 <?php if (validation_error('honorific')): ?>
                     <div class="invalid-feedback"><?= e(validation_error('honorific')) ?></div>
                 <?php endif; ?>
             </div>
+
+            <?php if (!isset($supportsSuffix) || $supportsSuffix): ?>
+                <div class="col-md-6">
+                    <label for="suffix" class="form-label fw-semibold">Suffix</label>
+                    <input
+                        type="text"
+                        id="suffix"
+                        name="suffix"
+                        class="form-control<?= validation_error('suffix') ? ' is-invalid' : '' ?>"
+                        value="<?= e(old('suffix', $employee['suffix'] ?? '')) ?>"
+                        placeholder="Jr., Sr., III, PhD"
+                    >
+                    <div class="form-text">Optional. Use this for the part of the name that comes after the surname.</div>
+                    <?php if (validation_error('suffix')): ?>
+                        <div class="invalid-feedback"><?= e(validation_error('suffix')) ?></div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
             <div class="col-md-6">
                 <label for="first_name" class="form-label fw-semibold">First Name</label>

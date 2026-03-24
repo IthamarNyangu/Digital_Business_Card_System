@@ -165,7 +165,7 @@
                         <?php foreach ($employees as $employee): ?>
                         <tr>
                             <td>
-                                <div class="fw-semibold"><?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name']])))) ?></div>
+                                <div class="fw-semibold"><?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name'], $employee['suffix'] ?? ''])))) ?></div>
                                 <div class="small text-muted"><?= e($employee['organization'] ?? config('app.organisation_name')) ?></div>
                             </td>
                             <td><?= e($employee['title'] ?? $employee['position'] ?? '') ?></td>
@@ -178,10 +178,10 @@
                                 <div class="small text-muted"><?= e($employee['street'] ?? '') ?></div>
                             </td>
                             <td>
-                                <a href="<?= e(path_url('/admin/qrcodes/' . $employee['id'] . '/preview')) ?>" target="_blank" class="qr-thumb-link" aria-label="Preview QR for <?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name']])))) ?>">
+                                <a href="<?= e(path_url('/admin/qrcodes/' . $employee['id'] . '/preview')) ?>" target="_blank" class="qr-thumb-link" aria-label="Preview QR for <?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name'], $employee['suffix'] ?? ''])))) ?>">
                                     <img
                                         src="<?= e(path_url('/admin/qrcodes/' . $employee['id'] . '/preview')) ?>"
-                                        alt="QR code for <?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name']])))) ?>"
+                                        alt="QR code for <?= e(trim(implode(' ', array_filter([$employee['honorific'] ?? '', $employee['first_name'], $employee['last_name'], $employee['suffix'] ?? ''])))) ?>"
                                         class="qr-thumb-image"
                                         loading="lazy"
                                     >

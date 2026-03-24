@@ -11,6 +11,7 @@ class TransposedCsvImportService
     public const FIELD_MAP = [
         'employeenumber' => ['label' => 'EmployeeNumber', 'key' => 'employee_number', 'required' => false],
         'honorific' => ['label' => 'Honorific', 'key' => 'honorific', 'required' => false],
+        'suffix' => ['label' => 'Suffix', 'key' => 'suffix', 'required' => false],
         'lastname' => ['label' => 'LastName', 'key' => 'last_name'],
         'firstname' => ['label' => 'FirstName', 'key' => 'first_name'],
         'organization' => ['label' => 'Organization', 'key' => 'organization'],

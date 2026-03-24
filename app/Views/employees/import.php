@@ -61,6 +61,7 @@
                 <div class="sample-csv-shell">
 <pre class="sample-csv-preview mb-0">EmployeeNumber,RTCZ001,RTCZ002
 Honorific,Ms.,Mrs.
+Suffix,,Jr.
 LastName,Bwalya,Malama
 FirstName,Mary,Beatrice
 Organization,Right to Care Zambia,Right to Care Zambia

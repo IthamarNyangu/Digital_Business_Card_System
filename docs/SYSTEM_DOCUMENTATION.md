@@ -137,6 +137,7 @@ The system stores these fields per employee:
 
 - `employee_number` (optional internal identifier)
 - `honorific` (optional prefix such as Mr., Mrs., Ms., or Dr.)
+- `suffix` (optional name ending such as Jr., Sr., III, or PhD)
 - `first_name`
 - `last_name`
 - `organization`
@@ -165,6 +166,7 @@ Example:
 ```csv
 EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
 Honorific,Ms.,Mrs.,Mr.
+Suffix,,,III
 LastName,Bwalya,Malama,Nyangu
 FirstName,Mary,Beatrice,Ithamar
 Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
@@ -196,6 +198,7 @@ Optional field row:
 
 - `EmployeeNumber`
 - `Honorific`
+- `Suffix`
 
 ## 8. How to Save the Excel File as CSV
 
@@ -352,9 +355,9 @@ Remember:
 
 That was earlier caused by update-style duplicate handling. The current version is designed to block duplicate identifiers instead.
 
-### Problem: Employee number or honorific field does not appear
+### Problem: Employee number, honorific, or suffix field does not appear
 
-Your database may not yet have the optional `employee_number` and `honorific` columns. The app will still work without them.
+Your database may not yet have the optional `employee_number`, `honorific`, and `suffix` columns. The app will still work without them.
 
 To enable it later:
 
@@ -362,6 +365,7 @@ To enable it later:
 ALTER TABLE employees
     ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
     ADD COLUMN honorific VARCHAR(20) NULL AFTER employee_number,
+    ADD COLUMN suffix VARCHAR(30) NULL AFTER honorific,
     ADD UNIQUE KEY uq_employees_employee_number (employee_number),
     ADD UNIQUE KEY uq_employees_phone (phone);
 ```

@@ -41,6 +41,11 @@ class EmployeeRepository
         return in_array('honorific', self::columnNames($pdo), true);
     }
 
+    public static function supportsSuffix(PDO $pdo): bool
+    {
+        return in_array('suffix', self::columnNames($pdo), true);
+    }
+
     private static function searchColumns(): array
     {
         return [
@@ -298,6 +303,10 @@ class EmployeeRepository
             'country',
         ];
 
+        if (self::supportsSuffix($pdo)) {
+            array_splice($columns, 2, 0, 'suffix');
+        }
+
         if (self::supportsHonorific($pdo)) {
             array_splice($columns, 1, 0, 'honorific');
         }
@@ -334,6 +343,10 @@ class EmployeeRepository
             'country = :country',
         ];
 
+        if (self::supportsSuffix($pdo)) {
+            array_splice($assignments, 2, 0, 'suffix = :suffix');
+        }
+
         if (self::supportsHonorific($pdo)) {
             array_splice($assignments, 1, 0, 'honorific = :honorific');
         }
@@ -366,6 +379,10 @@ class EmployeeRepository
             'postal_code' => $data['postal_code'],
             'country' => $data['country'],
         ];
+
+        if (self::supportsSuffix($pdo)) {
+            $params['suffix'] = $data['suffix'] ?? null;
+        }
 
         if (self::supportsHonorific($pdo)) {
             $params['honorific'] = $data['honorific'] ?? null;
