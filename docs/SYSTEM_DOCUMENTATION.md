@@ -1,234 +1,102 @@
-# RTCZ Bulk QR Contact Generator
+# Digital Business Card System Technical Documentation
 
-## 1. Purpose
+## 1. Overview
 
-The RTCZ Bulk QR Contact Generator is a standalone PHP and MySQL web application for Right to Care Zambia.
+This project is a standalone PHP 8.1+ web application for generating digital business card QR codes for Right to Care Zambia staff.
 
-Its purpose is to:
+The application supports:
 
-- generate QR codes that open a contact-save screen directly on a smartphone
-- reduce repeated manual entry of employee contact details
-- support both bulk employee uploads and one-off contact creation
-- give administrators a simple way to preview, download, print, and package QR codes
+- admin authentication
+- bulk import from a transposed CSV format
+- single-contact entry
+- vCard payload generation
+- PNG QR code generation
+- single QR preview and download
+- ZIP package export
+- print-friendly export for PDF generation
 
-Unlike a URL-based QR system, this version stores the contact data directly inside each QR code using vCard format. Once a QR image has been generated, it can be printed or shared and scanned even when the server or PC is offline.
+The QR codes are data-bearing QR codes, not link QR codes. Each QR embeds a vCard 3.0 payload directly, which means scanning works even when the application server is offline.
 
-## 2. Business Logic
+## 2. Technology Stack
 
-### 2.1 What the system does
+### 2.1 Backend
 
-- An admin logs in to the system.
-- The admin either:
-  - uploads a transposed CSV file for bulk generation, or
-  - fills in a single-contact form
-- The system validates the data.
-- The system generates a QR code PNG for each valid employee.
-- The QR code stores the employee contact details directly.
-- The admin can:
-  - preview a QR code
-  - download a single QR code
-  - download all QR codes in one ZIP package
-  - open a print-friendly page and save it as PDF
+- PHP `^8.1`
+- MySQL or MariaDB via PDO
+- Composer autoloading for vendor packages
+- `chillerlan/php-qrcode` for QR image generation
 
-### 2.2 Duplicate handling
+### 2.2 Frontend
 
-This system is configured to prevent silent replacement of staff records.
+- server-rendered PHP views
+- Bootstrap 5.3.3 loaded from CDN
+- Google Fonts loaded from CDN
+- custom styling in `public/assets/css/app.css`
 
-Current duplicate rules:
+### 2.3 Runtime Extensions
 
-- same names are allowed
-- duplicate email is blocked
-- duplicate phone number is blocked
-- duplicate employee number is blocked when that field exists in the database
+The codebase depends on these PHP extensions in production:
 
-Important:
+- `pdo_mysql` for database connectivity
+- `gd` for PNG QR rendering
+- `mbstring` for Composer requirement compatibility
+- `zip` for bulk ZIP export
 
-- duplicate records are rejected
-- they are not automatically updated
-- this prevents one employee from accidentally replacing another
+Notes:
 
-## 3. QR Technology Used
+- `ext-zip` is used at runtime by the ZIP export flow even though it is not listed in `composer.json`
+- the application can run without ZIP export if the extension is unavailable, but the download-all action will fail with a runtime error
 
-This system uses **vCard QR codes**.
+## 3. High-Level Architecture
 
-That means:
-
-- the contact data is stored directly inside the QR code
-- scanning the QR opens the device contact-save prompt
-- the QR does not open a public webpage
-- the QR does not depend on internet access after generation
-
-### 3.1 Why this matters
-
-Pros:
-
-- works offline
-- PC does not need to be on for QR scanning to work
-- server does not need to be reachable for QR scanning to work
-- good for printed business cards or printed assets
-
-Cons:
-
-- if contact data changes, the QR must be regenerated
-- printed QR codes do not update automatically
-- there is no live server-managed profile behind the QR
-
-## 4. System Features
-
-### 4.1 Admin authentication
-
-- username and password login
-- password hash stored in the database
-- session-based authentication
-- inactivity timeout
-
-### 4.2 Bulk CSV import
-
-- accepts transposed CSV files
-- column A contains field names
-- each column after A is one employee
-- skips completely empty employee columns
-- reports success and failure counts
-
-### 4.3 Single contact entry
-
-- allows one employee to be added without preparing a CSV file
-- useful for quick additions and corrections
-
-### 4.4 QR outputs
-
-- single preview
-- single download
-- ZIP package download
-- print/PDF-friendly report
-
-### 4.5 ZIP package contents
-
-The ZIP package contains:
-
-- all QR PNG files in a `qr-codes/` folder
-- `employee_list.csv`
-- `README.txt`
-
-## 5. Main Admin Workflow
-
-### 5.1 Bulk import workflow
-
-1. Log in
-2. Open `Bulk Import CSV`
-3. Upload the transposed CSV file
-4. Click `Generate QR Codes`
-5. Review the results page
-6. Preview or download the generated QR codes
-7. Optionally download the ZIP package or print the report as PDF
-
-### 5.2 Single entry workflow
-
-1. Log in
-2. Open `Add Single Contact`
-3. Fill in the required fields
-4. Save the contact
-5. Review the results page
-6. Preview or download the QR code
-
-## 6. Required Contact Fields
-
-The system stores these fields per employee:
-
-- `employee_number` (optional internal identifier)
-- `honorific` (optional prefix such as Mr., Mrs., Ms., or Dr.)
-- `suffix` (optional name ending such as Jr., Sr., III, or PhD)
-- `first_name`
-- `last_name`
-- `organization`
-- `title`
-- `phone`
-- `email`
-- `street`
-- `city`
-- `region`
-- `postal_code`
-- `country`
-- `mecard_payload` (legacy-named payload storage column)
-- `qr_code_path`
-
-Important:
-
-- `employee_number` is internal only
-- it is not included in the QR payload that is scanned
-
-## 7. CSV Format
-
-The CSV format is transposed.
-
-Example:
-
-```csv
-EmployeeNumber,RTCZ001,RTCZ002,RTCZ003
-Honorific,Ms.,Mrs.,Mr.
-Suffix,,,III
-LastName,Bwalya,Malama,Nyangu
-FirstName,Mary,Beatrice,Ithamar
-Organization,Right to Care Zambia,Right to Care Zambia,Right to Care Zambia
-Title,Program Manager,Admin Officer,Applications Developer
-Phone,+260 977 123 100,0972448338,0979511258
-Email,mary.bwalya@righttocare.org.zm,beatrice@righttocare-zambia.org,ithamar.nyangu@righttocare-zambia.org
-Street,Plot 12 Addis Ababa Drive,Plot 12 Addis Ababa Drive,Plot 12 Addis Ababa Drive
-City,Lusaka,Lusaka,Lusaka
-Region,Lusaka Province,Lusaka Province,Lusaka Province
-PostalCode,10101,10101,10101
-Country,Zambia,Zambia,Zambia
-```
-
-Required field rows:
-
-- `LastName`
-- `FirstName`
-- `Organization`
-- `Title`
-- `Phone`
-- `Email`
-- `Street`
-- `City`
-- `Region`
-- `PostalCode`
-- `Country`
-
-Optional field row:
-
-- `EmployeeNumber`
-- `Honorific`
-- `Suffix`
-
-## 8. How to Save the Excel File as CSV
-
-1. Open the contact list in Excel.
-2. Put field names in column A.
-3. Put one employee in each column from column B onward.
-4. Click `File`.
-5. Click `Save As`.
-6. Choose `CSV UTF-8 (Comma delimited) (*.csv)` if available.
-7. Save the file.
-8. Upload it in the system.
-
-## 9. Routes
-
-### Admin routes
-
-- `/admin/login`
-- `/admin/dashboard`
-- `/admin/import`
-- `/admin/contacts/create`
-- `/admin/results`
-- `/admin/qrcodes/{id}/preview`
-- `/admin/qrcodes/{id}/download`
-- `/admin/qrcodes/download-all`
-- `/admin/qrcodes/print-report`
-
-## 10. Folder Overview
+The application uses a lightweight front-controller pattern with manual route dispatching.
 
 ```text
-config/
+Browser
+  -> public/index.php
+  -> app/bootstrap.php
+  -> Controller
+  -> Validator / Repository / Service layer
+  -> MySQL + storage/qrcodes
+  -> PHP view layout
+  -> HTML, PNG, ZIP, or printable report response
+```
+
+### 3.1 Entry Point
+
+`public/index.php` is the only web entry point. It:
+
+- boots the application
+- resolves the normalized request path
+- routes requests with explicit `if` checks
+- instantiates controllers directly
+- renders `404` and `500` views when needed
+
+### 3.2 Bootstrap Sequence
+
+`app/bootstrap.php` performs application initialization:
+
+- defines `BASE_PATH`
+- registers a custom autoloader for `App\`
+- loads Composer dependencies if `vendor/autoload.php` exists
+- loads helper functions
+- loads application and database configuration into `$GLOBALS['config']`
+- sets the default timezone
+- starts the PHP session for web requests
+
+### 3.3 Hosting Model
+
+The helper layer supports installation in a subdirectory such as:
+
+```text
+/Digital_Business_Card_System/public
+```
+
+`current_path()` strips the script directory from `REQUEST_URI`, which allows the same route definitions to work whether the project is hosted at the domain root or inside a subfolder.
+
+## 4. Directory Structure
+
+```text
 app/
   Controllers/
   Core/
@@ -236,161 +104,672 @@ app/
   Services/
   Support/
   Views/
+config/
 database/
 docs/
+media/
 public/
   assets/css/
   downloads/
   media/
 scripts/
-storage/qrcodes/
+storage/
+  qrcodes/
+vendor/
 ```
 
-## 11. Technical Architecture
+Key directories:
 
-### 11.1 Core structure
+- `app/Controllers/` contains HTTP request handlers
+- `app/Core/` contains auth, CSRF, and database access primitives
+- `app/Repositories/` contains all direct SQL interaction
+- `app/Services/` contains CSV parsing, vCard generation, and QR image generation
+- `app/Views/` contains layouts and page templates
+- `database/` contains schema and sample seed data
+- `scripts/` contains CLI administration utilities
+- `storage/qrcodes/` stores generated QR PNG files outside the public web root
 
-- `public/index.php` is the front controller and router
-- `app/bootstrap.php` loads config, autoloading, helpers, and sessions
-- `config/database.php` contains DB configuration
-- `config/app.php` contains app configuration
+## 5. Request Lifecycle
 
-### 11.2 Main services
+### 5.1 Standard HTML Request
 
-- `TransposedCsvImportService`
-  - parses uploaded CSV files
-- `VcardService`
-  - builds the vCard payload
-- `QrCodeService`
-  - generates the PNG QR image
+1. The request hits `public/index.php`.
+2. `app/bootstrap.php` initializes autoloading, config, helpers, timezone, and session state.
+3. The current route is resolved with `current_path()`.
+4. A controller action validates authentication if required.
+5. The controller coordinates validation, persistence, and service calls.
+6. The controller renders a view or returns a direct file response.
 
-### 11.3 Repository layer
+### 5.2 File and Asset Responses
 
-- `EmployeeRepository`
-  - handles employee storage
-  - duplicate checks
-  - list and export queries
-- `AdminRepository`
-  - handles admin lookup and creation
+QR preview, QR download, and ZIP export bypass HTML rendering and write headers directly:
 
-## 12. Local Testing
+- preview returns `image/png` inline
+- download returns `image/png` as an attachment
+- ZIP export returns `application/zip`
 
-Typical local URL:
+### 5.3 Error Handling
 
-- `http://127.0.0.1:8000`
+The front controller wraps dispatch in a `try/catch` block:
 
-Common local pages:
+- unmatched routes render `errors/404`
+- unhandled exceptions render `errors/500`
+- when `APP_DEBUG` is enabled, the raw exception message is shown
+- otherwise a generic server error message is shown
 
-- `http://127.0.0.1:8000/admin/login`
-- `http://127.0.0.1:8000/admin/import`
-- `http://127.0.0.1:8000/admin/contacts/create`
-- `http://127.0.0.1:8000/admin/results`
+## 6. Route Map
 
-Start the local server:
+| Method | Route | Responsibility |
+| --- | --- | --- |
+| `GET` | `/` | Redirect to dashboard if logged in, otherwise login |
+| `GET` | `/admin/login` | Render login page |
+| `POST` | `/admin/login` | Authenticate admin |
+| `POST` | `/admin/logout` | Destroy session |
+| `POST` | `/admin/session/ping` | Keep active session alive |
+| `GET` | `/admin/dashboard` | Render dashboard metrics |
+| `GET` | `/admin/import` | Render bulk CSV import page |
+| `POST` | `/admin/import` | Process uploaded CSV and generate QR codes |
+| `GET` | `/admin/contacts/create` | Render single-contact form |
+| `POST` | `/admin/contacts/create` | Create one contact and generate QR |
+| `GET` | `/admin/employees/create` | Alias for single-contact form |
+| `POST` | `/admin/employees/create` | Alias for single-contact creation |
+| `GET` | `/admin/results` | Render stored contacts and latest import summary |
+| `GET` | `/admin/employees` | Alias for results page |
+| `GET` | `/admin/qrcodes/{id}/preview` | Stream QR PNG inline |
+| `GET` | `/admin/qrcodes/{id}/download` | Download QR PNG |
+| `GET` | `/admin/qrcodes/download-all` | Generate ZIP package of all contacts |
+| `GET` | `/admin/qrcodes/print-report` | Render printable report layout |
+
+## 7. Core Modules
+
+### 7.1 `App\Core\Database`
+
+Responsibilities:
+
+- creates a single PDO connection per request
+- configures exception-based PDO error handling
+- disables emulated prepared statements
+
+Connection DSN format:
+
+```text
+mysql:host={host};port={port};dbname={database};charset={charset}
+```
+
+### 7.2 `App\Core\Auth`
+
+Responsibilities:
+
+- authenticates an admin against the `admins` table
+- stores the authenticated admin in `$_SESSION['admin']`
+- rotates the session ID on login and logout
+- tracks inactivity timeout in `$_SESSION['admin_last_activity_at']`
+
+Authentication details:
+
+- passwords are verified with `password_verify()`
+- sessions expire after the configured inactivity threshold
+- the current implementation defaults to `300` seconds unless overridden by environment variables
+
+### 7.3 `App\Core\Csrf`
+
+Responsibilities:
+
+- creates a session-backed CSRF token
+- renders a hidden input helper for forms
+- validates tokens on `POST` actions
+
+Failure mode:
+
+- invalid tokens return HTTP `419`
+- the response body is a plain-text error message
+
+### 7.4 `App\Support\Validator`
+
+Responsibilities:
+
+- validates login payloads
+- validates uploaded CSV files
+- normalizes and validates employee/contact payloads
+
+Validation rules include:
+
+- required field enforcement
+- string length limits aligned to schema sizes
+- basic phone format validation
+- email format validation
+
+### 7.5 `App\Repositories\AdminRepository`
+
+Responsibilities:
+
+- lookup admin users by username
+- create admin records for CLI bootstrap flows
+
+### 7.6 `App\Repositories\EmployeeRepository`
+
+Responsibilities:
+
+- discover available `employees` table columns
+- detect schema drift
+- paginate and search contacts
+- fetch dashboard metrics
+- create employee records
+- persist generated payload and QR path metadata
+
+Important implementation detail:
+
+- the public method is named `upsertContact()`
+- the current behavior is create-only, not update-or-insert
+- duplicate email, phone, and employee number values cause an exception
+- records are never automatically updated during import
+
+### 7.7 `App\Services\TransposedCsvImportService`
+
+Responsibilities:
+
+- parse the uploaded CSV using a transposed spreadsheet model
+- map spreadsheet labels to internal field names
+- strip a UTF-8 BOM when present
+- ignore unknown rows
+- detect missing required rows
+- skip fully empty employee columns
+
+Additional behavior:
+
+- import failures are tagged with spreadsheet-style column labels such as `B`, `C`, and `AA`
+- the parser reads rows with `fgetcsv()` and trims all cell values
+
+### 7.8 `App\Services\VcardService`
+
+Responsibilities:
+
+- build a vCard 3.0 payload from an employee record
+- include organization website from app configuration
+- escape newlines, commas, semicolons, and backslashes correctly
+
+Payload characteristics:
+
+- `employee_number` is intentionally excluded from the QR payload
+- `honorific` and `suffix` are included in `FN` and `N` when present
+- line endings are CRLF (`\r\n`)
+
+### 7.9 `App\Services\QrCodeService`
+
+Responsibilities:
+
+- render a QR code PNG from the stored vCard payload
+- create `storage/qrcodes/` when needed
+- remove an old file if the QR filename changes
+
+Filename format:
+
+```text
+{first_name}_{last_name}_{id}_qrcode.png
+```
+
+Example:
+
+```text
+mary_bwalya_12_qrcode.png
+```
+
+## 8. Controller Responsibilities
+
+### 8.1 `AuthController`
+
+- renders the login page
+- validates login submissions
+- authenticates admins
+- logs users out
+- exposes the session heartbeat endpoint
+
+### 8.2 `DashboardController`
+
+- enforces login
+- checks that the current database schema includes required employee columns
+- renders summary metrics:
+  - total employees
+  - total QR-enabled employees
+  - distinct organization count
+  - five most recently updated employees
+
+### 8.3 `EmployeeController`
+
+Responsibilities:
+
+- render import and single-entry forms
+- process CSV import
+- create individual contacts
+- render the results page
+- preview and download QR codes
+- export ZIP archives
+- render the printable report
+
+Notable controller behavior:
+
+- import summaries are stored once in `$_SESSION['import_summary']` and consumed on the next results-page load
+- QR preview, download, ZIP export, and print export regenerate missing or legacy QR assets on demand
+- schema compatibility is enforced before import, create, results, preview, ZIP, and print actions
+
+## 9. Data Model
+
+### 9.1 `admins`
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED` | Primary key |
+| `username` | `VARCHAR(50)` | Unique |
+| `password_hash` | `VARCHAR(255)` | Created with `password_hash()` |
+| `created_at` | `TIMESTAMP` | Defaults to current timestamp |
+
+### 9.2 `employees`
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED` | Primary key |
+| `employee_number` | `VARCHAR(50)` nullable | Optional internal identifier, unique when present |
+| `honorific` | `VARCHAR(20)` nullable | Optional prefix |
+| `suffix` | `VARCHAR(30)` nullable | Optional name suffix |
+| `first_name` | `VARCHAR(80)` | Required |
+| `last_name` | `VARCHAR(80)` | Required |
+| `organization` | `VARCHAR(150)` | Required |
+| `title` | `VARCHAR(150)` | Required |
+| `phone` | `VARCHAR(50)` | Required, unique |
+| `email` | `VARCHAR(150)` | Required, unique |
+| `street` | `VARCHAR(150)` | Required |
+| `city` | `VARCHAR(120)` | Required |
+| `region` | `VARCHAR(120)` | Required |
+| `postal_code` | `VARCHAR(30)` | Required |
+| `country` | `VARCHAR(120)` | Required |
+| `mecard_payload` | `TEXT` nullable | Legacy column name; stores vCard content |
+| `qr_code_path` | `VARCHAR(255)` nullable | Relative filesystem path |
+| `created_at` | `TIMESTAMP` | Defaults to current timestamp |
+| `updated_at` | `TIMESTAMP` | Auto-updated on modification |
+
+### 9.3 Indexes and Constraints
+
+- unique: `employee_number`
+- unique: `phone`
+- unique: `email`
+- index: `(last_name, first_name)`
+- index: `organization`
+- index: `title`
+
+### 9.4 Schema Compatibility Guard
+
+The application checks for these columns before enabling bulk features:
+
+- `organization`
+- `title`
+- `street`
+- `city`
+- `region`
+- `postal_code`
+- `country`
+- `mecard_payload`
+- `qr_code_path`
+- `updated_at`
+
+If any are missing, the dashboard and employee flows stop with a remediation message instructing the operator to re-import `database/schema.sql`.
+
+## 10. Employee Search Behavior
+
+The results page supports keyword search against these columns:
+
+- `first_name`
+- `last_name`
+- `CONCAT(first_name, " ", last_name)`
+- `organization`
+- `title`
+- `phone`
+- `email`
+- `city`
+- `country`
+
+Search semantics:
+
+- the query is split on whitespace
+- up to six terms are used
+- each term must match at least one searchable column
+- terms are combined with `AND`
+- columns within a term are combined with `OR`
+
+This produces reasonably strict multi-word search behavior. For example:
+
+```text
+mary lusaka
+```
+
+matches rows where one searchable field matches `mary` and another matches `lusaka`.
+
+## 11. CSV Import Pipeline
+
+### 11.1 Expected Format
+
+The import file is transposed:
+
+- column A contains field labels
+- each following column represents one employee
+
+Supported labels:
+
+| CSV Label | Internal Key | Required |
+| --- | --- | --- |
+| `EmployeeNumber` | `employee_number` | No |
+| `Honorific` | `honorific` | No |
+| `Suffix` | `suffix` | No |
+| `LastName` | `last_name` | Yes |
+| `FirstName` | `first_name` | Yes |
+| `Organization` | `organization` | Yes |
+| `Title` | `title` | Yes |
+| `Phone` | `phone` | Yes |
+| `Email` | `email` | Yes |
+| `Street` | `street` | Yes |
+| `City` | `city` | Yes |
+| `Region` | `region` | Yes |
+| `PostalCode` | `postal_code` | Yes |
+| `Country` | `country` | Yes |
+
+Unknown rows are ignored, which lets operators carry extra spreadsheet rows without breaking the import.
+
+### 11.2 Processing Steps
+
+1. Validate upload presence, extension, and size.
+2. Parse CSV rows with `fgetcsv()`.
+3. Normalize row labels and build a field-row map.
+4. Verify all required labels exist.
+5. Read one employee payload per non-empty column.
+6. Validate required values and field formats.
+7. Reject duplicates before insert.
+8. Create the employee row.
+9. Build the vCard payload.
+10. Generate the QR PNG.
+11. Save payload and QR path back to the employee record.
+12. Build an import summary for the next page load.
+
+### 11.3 Import Outcomes
+
+The import summary tracks:
+
+- processed columns
+- skipped empty columns
+- success count
+- created count
+- failure count
+- per-column success details
+- per-column failure reasons
+
+## 12. QR Generation and Export
+
+### 12.1 QR Regeneration Strategy
+
+Whenever a QR preview, QR download, ZIP export, or print export is requested, the controller verifies that:
+
+- the stored payload begins with `BEGIN:VCARD`
+- the referenced QR file exists
+
+If either check fails:
+
+- a fresh vCard payload is rebuilt
+- a new PNG is generated
+- the database record is updated
+
+This makes the export layer self-healing for older records or missing files.
+
+### 12.2 ZIP Package Contents
+
+The ZIP export contains:
+
+- `qr-codes/` directory with one PNG per employee
+- `employee_list.csv` contact register
+- `README.txt` package summary
+
+### 12.3 Printable Report
+
+The print report uses a dedicated print layout and renders:
+
+- employee name
+- title
+- organization
+- phone
+- email
+- full address
+- employee number when present
+- QR image preview
+- QR filename
+
+The operator is expected to use the browser print dialog to save the page as PDF.
+
+## 13. Views and UX Notes
+
+### 13.1 Layouts
+
+- `layouts/admin.php` is the authenticated shell and also hosts the login page
+- `layouts/print.php` is the print/PDF shell
+
+### 13.2 Session Heartbeat
+
+The admin layout includes client-side JavaScript that:
+
+- tracks user activity
+- schedules automatic logout after the configured inactivity window
+- periodically posts to `/admin/session/ping`
+- redirects to login when the session is no longer valid
+
+This keeps active users signed in while still enforcing inactivity timeouts.
+
+### 13.3 Results Page
+
+The results view includes:
+
+- latest import summary
+- searchable contact directory
+- server-side pagination at 10 contacts per page
+- inline QR thumbnails
+- direct preview and download links
+
+## 14. Configuration
+
+### 14.1 Application Configuration
+
+`config/app.php` supports these environment variables:
+
+| Variable | Default |
+| --- | --- |
+| `APP_ORGANISATION_WEBSITE` | `https://righttocare-zambia.org/` |
+| `APP_URL` | `http://160.242.60.31/Digital_Business_Card_System/public` |
+| `APP_TIMEZONE` | `Africa/Lusaka` |
+| `APP_SESSION_NAME` | `rtc_zambia_cards_admin` |
+| `APP_SESSION_COOKIE_SECURE` | auto-detected from HTTPS or port 443 |
+| `APP_SESSION_COOKIE_SAMESITE` | `Lax` |
+| `APP_SESSION_TIMEOUT_SECONDS` | `300` |
+| `APP_DEBUG` | `false` |
+
+Notes:
+
+- `APP_URL` is used for absolute URL generation only
+- QR codes do not depend on `APP_URL` because they embed vCard data directly
+- local development should override `APP_URL` to match the local server
+
+### 14.2 Database Configuration
+
+`config/database.php` supports:
+
+| Variable | Default |
+| --- | --- |
+| `DB_HOST` | `127.0.0.1` |
+| `DB_PORT` | `3306` |
+| `DB_DATABASE` | `rtc_digital_cards` |
+| `DB_USERNAME` | `root` |
+| `DB_PASSWORD` | empty string |
+
+Charset is fixed to `utf8mb4`.
+
+## 15. Local Development and Deployment
+
+### 15.1 Initial Setup
+
+1. Install dependencies with `composer install`.
+2. Import `database/schema.sql`.
+3. Optionally import `database/seed.sql`.
+4. Create an admin user with `php scripts/create_admin.php`.
+5. Serve the `public/` directory through PHP's built-in server or Apache.
+
+### 15.2 Example Local Server Command
 
 ```powershell
-& "C:\wamp64\bin\php\php8.2.26\php.exe" -S 127.0.0.1:8000 -t public
+php -S 127.0.0.1:8000 -t public
 ```
 
-## 13. Windows Apache Server Notes
+Recommended local overrides:
 
-For your Windows Apache setup, the project has been prepared for:
+```text
+APP_URL=http://127.0.0.1:8000
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=rtc_digital_cards
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-- internal path example:
-  - `http://10.7.50.26/Digital_Business_Card_System/public`
-- public path example:
-  - `http://160.242.60.31/Digital_Business_Card_System/public`
+### 15.3 Apache or Shared Windows Hosting
 
-Important:
+The application is suitable for classic Apache + PHP hosting where the document root points to `public/`.
 
-- this vCard version does not need the public URL for the QR to work after generation
-- the public/internal URL matters mainly for accessing the admin app in the browser
+For subfolder hosting, ensure:
 
-## 14. PHP Requirements
+- the web server exposes `public/`
+- `APP_URL` includes the subfolder path
+- PHP can write to `storage/qrcodes/`
 
-Required:
+### 15.4 Offline and Network Considerations
 
-- `pdo_mysql`
-- `gd`
-- `zip`
+Generated QR images work offline once created, but the admin interface may still rely on network access for:
 
-Recommended:
+- Bootstrap CDN
+- Google Fonts CDN
 
-- `mbstring`
+If the deployment environment is fully offline, those assets should be vendored or self-hosted.
 
-## 15. Database Setup
+## 16. CLI Administration Utilities
 
-Import:
+### 16.1 Create Admin
 
-- `database/schema.sql`
+`scripts/create_admin.php`
 
-Optional sample data:
+Features:
 
-- `database/seed.sql`
+- CLI-only execution
+- accepts `--username` and `--password`
+- falls back to interactive prompts if arguments are omitted
+- prevents duplicate usernames
 
-Create the first admin:
+### 16.2 Update Admin Password
+
+`scripts/update_admin_password.php`
+
+Features:
+
+- updates an existing admin password hash
+- requires `--username` and `--password`
+- exits with an error if the user does not exist
+
+Example:
 
 ```powershell
-C:\php\php.exe C:\Apache24\htdocs\Digital_Business_Card_System\scripts\create_admin.php --username=admin --password=RTCZ2025
+php scripts/update_admin_password.php --username=admin --password=NewPassword123!
 ```
 
-## 16. Troubleshooting
+## 17. Seed Data
 
-### Problem: QR does not scan
+`database/seed.sql` inserts three sample employees with realistic contact data and null QR metadata. QR files are generated lazily the first time those records are previewed, downloaded, or included in exports.
+
+## 18. Security Considerations
+
+Current security controls:
+
+- password hashes stored in the database
+- CSRF protection on all authenticated `POST` actions
+- session ID regeneration on login and logout
+- inactivity-based session expiry
+- prepared statements for data writes and filtered reads
+- HTML escaping through `e()` in the view layer
+
+Operational cautions:
+
+- there is no role-based access model; all authenticated admins are equivalent
+- there is no rate limiting on login
+- file upload validation checks extension and upload status, but not MIME type
+- Bootstrap and Google Fonts are loaded from external CDNs
+
+## 19. Known Design Decisions and Constraints
+
+- the `mecard_payload` column name is retained for backward compatibility, but it stores vCard content
+- duplicate contacts are blocked instead of updated
+- QR filenames are derived from name + ID and stored as relative paths
+- generated PNG files are not publicly browsable by default because they live under `storage/`
+- the results-page import summary is ephemeral and exists for one redirect cycle
+- the application uses direct controller instantiation instead of a container or routing framework
+
+## 20. Extension Points
+
+Common enhancement areas:
+
+- add edit and delete workflows for contacts
+- replace manual routing with a dedicated router
+- move environment loading to `.env` support
+- add audit logging for imports and downloads
+- self-host frontend assets for air-gapped deployments
+- add automated tests around import validation and QR generation
+- rename `mecard_payload` to `vcard_payload` through a managed migration
+
+## 21. Troubleshooting Reference
+
+### 21.1 Login Fails Even With Correct Credentials
 
 Check:
 
-- the image is clear
-- the QR is not compressed too heavily by a messaging app
-- the phone camera or QR scanner supports vCard contacts
+- the `admins` table contains the expected username
+- the password was created with `password_hash()`
+- the session directory is writable by PHP
 
-### Problem: QR works locally but not through server URL
+### 21.2 Import Page Shows a Database Update Error
 
-Remember:
+The `employees` table does not match the expected schema. Re-import `database/schema.sql`, optionally re-import `database/seed.sql`, and recreate the admin account if the database was rebuilt.
 
-- this version stores contact data directly in the QR
-- once the PNG is generated, scanning does not depend on the server
+### 21.3 ZIP Export Fails
 
-### Problem: A new person replaced an existing one
+Check:
 
-That was earlier caused by update-style duplicate handling. The current version is designed to block duplicate identifiers instead.
+- the PHP `zip` extension is enabled
+- PHP can create temporary files in the system temp directory
+- QR files exist or can be regenerated
 
-### Problem: Employee number, honorific, or suffix field does not appear
+### 21.4 QR Preview or Download Fails
 
-Your database may not yet have the optional `employee_number`, `honorific`, and `suffix` columns. The app will still work without them.
+Check:
 
-To enable it later:
+- Composer dependencies are installed
+- the `gd` extension is enabled
+- PHP can create and write to `storage/qrcodes/`
 
-```sql
-ALTER TABLE employees
-    ADD COLUMN employee_number VARCHAR(50) NULL AFTER id,
-    ADD COLUMN honorific VARCHAR(20) NULL AFTER employee_number,
-    ADD COLUMN suffix VARCHAR(30) NULL AFTER honorific,
-    ADD UNIQUE KEY uq_employees_employee_number (employee_number),
-    ADD UNIQUE KEY uq_employees_phone (phone);
-```
+### 21.5 Generated QR Does Not Open a Contact Screen
 
-## 17. Recommended Operational Use
+Check:
 
-Best use cases for this system:
+- the scanning device supports vCard QR codes
+- the PNG has not been recompressed heavily
+- the contact data is not malformed or unusually long
 
-- printed business cards
-- downloadable QR contact packs
-- offline sharing of staff contact information
+## 22. Summary
 
-Less ideal if:
+The Digital Business Card System is a lightweight PHP/MySQL administrative tool for generating offline-capable vCard QR codes from structured staff contact data.
 
-- staff contact details change very often
-- printed QR cards are expected to remain valid forever without reprint
+From a maintenance perspective, the most important implementation characteristics are:
 
-In those cases, a token URL QR model is more flexible than a direct vCard QR model.
-
-## 18. Summary
-
-This system is best described as:
-
-- a bulk and single-entry QR contact generator
-- using vCard QR technology
-- optimized for offline scanning
-- protected against accidental duplicate replacement
-- designed for simple PHP + MySQL + Apache hosting
+- direct route dispatch through a single front controller
+- create-only contact persistence with duplicate blocking
+- schema-aware bulk features
+- lazy QR regeneration
+- filesystem-backed QR storage outside the public web root
